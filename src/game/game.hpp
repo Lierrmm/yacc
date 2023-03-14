@@ -52,13 +52,43 @@ namespace game
 	{
 		extern dvar_t* Dvar_FindVar(const char* name);
 		extern void dvar_set_value_dirty(dvar_t* dvar, bool value);
-		extern void R_AddCmdDrawTextASM(const char* text, int max_chars, void* font, float x, float y, float x_scale, float y_scale, float rotation, const float* color, int style);
 		extern void ConDraw_Box(float* color, float x, float y, float width, float height);
 		extern inline dvar_t* Dvar_RegisterBool(const char* dvar_name, const char* description, std::int32_t default_value, std::uint16_t flags);
-		extern inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags);
+		//extern inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags);
 		extern inline dvar_t* Dvar_RegisterEnum(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t enum_size, const char** enum_data, std::uint16_t flags);
-		
-		
+		extern inline dvar_t* Dvar_RegisterVec2(const char* dvar_name, const char* description, float x, float y, float min_value, float max_value, std::uint16_t flags);
+		extern void Cbuf_AddText(const char* text /*eax*/, int local_client_num /*ecx*/);
+		extern void Cmd_AddCommand(const char* name, void(*callback)(), cmd_function_s* data, char);
+		extern void Cmd_AddCommand(const char* name, const char* args, const char* description, void(*callback)(), cmd_function_s* data, char);
+		extern void FS_DisplayPath(int bLanguageCull /*eax*/);
+
+		extern void UI_DrawText(const ScreenPlacement* scrPlace, const char* text, int maxChars, Font_s* font, float ix, float iy, int horzAlign, int vertAlign, float scale, const float* color, int style);
+		extern int UI_TextHeight(Font_s* font, float scale);
+		extern int UI_TextWidth(const char* text, int maxChars, Font_s* font, float scale);
+		extern int R_TextHeight(Font_s* font);
+
+		extern int String_Parse(const char** p /*eax*/, char* out_str, int len);
+		extern void Menus_OpenByName(const char* menu_name, game::native::UiContext* ui_dc);
+		extern void Menus_CloseByName(const char* menu_name, game::native::UiContext* ui_dc);
+		extern void Menus_CloseAll(game::native::UiContext* ui_dc);
+
+		extern bool sub_503A80(const char* a1, netadr_t* a2);
+
+		extern const char* UI_SafeTranslateString(const char* name);
+
+		extern const char* UI_GetCurrentMapName();
+		extern const char* UI_GetCurrentGameType();
+
+		extern const char* Win_GetLanguage();
+
+		extern unsigned int R_HashString(const char* string);
+		extern void Conbuf_AppendText_ASM(const char* string);
+
+		extern float Vec3Normalize(vec3_t& vec);
+		extern void Vec2UnpackTexCoords(const PackedTexCoords in, vec2_t* out);
+		extern void MatrixVecMultiply(const float(&mulMat)[3][3], const vec3_t& mulVec, vec3_t& solution);
+		extern void Vec3UnpackUnitVec(PackedUnitVec in, vec3_t& out);
+
 		namespace glob
 		{
 			// general

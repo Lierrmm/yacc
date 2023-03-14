@@ -40,6 +40,7 @@
 #include <MsHtmHst.h>
 #include <ExDisp.h>
 #include <WinSock2.h>
+#include <d3d9.h>
 #include <WS2tcpip.h>
 #include <corecrt_io.h>
 #include <fcntl.h>
@@ -86,6 +87,9 @@
 #pragma comment(lib, "ws2_32.lib")
 
 #pragma warning(pop)
+
+#include <d3dx9tex.h>
+#pragma comment(lib, "D3dx9.lib")
 
 #pragma warning(disable: 4100)
 #pragma warning(disable: 26812)

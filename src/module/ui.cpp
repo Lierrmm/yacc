@@ -9,252 +9,77 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <game/dvars.hpp>
+#include "command.hpp"
 
-#define MAINMENU_INIT_FADE_TIME 50.0f
+game::native::dvar_t* g_dump_scripts;
+game::native::dvar_t* g_dump_images;
+game::native::dvar_t* db_print_default_assets;
 
-void scrplace_apply_rect(float* offs_x, float* w, float* offs_y, float* h, int horz_anker, int vert_anker)
+utils::hook::detour db_find_xasset_header_hook;
+
+void UI_DrawBuildString()
 {
-	float _x, _w, _y, _h;
+	int ctx; // client id
+	float size; 
+	game::native::Font_s* font;
+	float fontscale;
+	float ypos;
+	float xpos;
+	const char* buildString;
 
-	switch (horz_anker)
+	if (game::native::ui_context->openMenuCount > 2)
 	{
-	case HORIZONTAL_ALIGN_SUBLEFT:
-		_x = game::native::scrPlace->scaleVirtualToReal[0] * *offs_x + game::native::scrPlace->subScreenLeft;
-		_w = game::native::scrPlace->scaleVirtualToReal[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_LEFT:
-		_x = game::native::scrPlace->scaleVirtualToReal[0] * *offs_x + game::native::scrPlace->realViewableMin[0];
-		_w = game::native::scrPlace->scaleVirtualToReal[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_CENTER:
-		_x = game::native::scrPlace->scaleVirtualToReal[0] * *offs_x + game::native::scrPlace->realViewportSize[0] * 0.5f;
-		_w = game::native::scrPlace->scaleVirtualToReal[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_RIGHT:
-		_x = game::native::scrPlace->scaleVirtualToReal[0] * *offs_x + game::native::scrPlace->realViewableMax[0];
-		_w = game::native::scrPlace->scaleVirtualToReal[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_FULLSCREEN:
-		_x = game::native::scrPlace->scaleVirtualToFull[0] * *offs_x;
-		_w = game::native::scrPlace->scaleVirtualToFull[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_NOSCALE:
-		goto USE_VERT_ALIGN; // we might wan't vertical alignment
-
-	case HORIZONTAL_ALIGN_TO640:
-		_x = game::native::scrPlace->scaleRealToVirtual[0] * *offs_x;
-		_w = game::native::scrPlace->scaleRealToVirtual[0] * *w;
-		break;
-
-	case HORIZONTAL_ALIGN_CENTER_SAFEAREA:
-		_x = (game::native::scrPlace->realViewableMax[0] + game::native::scrPlace->realViewableMin[0]) * 0.5f + game::native::scrPlace->scaleVirtualToReal[0] * *offs_x;
-		_w = game::native::scrPlace->scaleVirtualToReal[0] * *w;
-		break;
-
-	default:
-		goto USE_VERT_ALIGN; // we might wan't vertical alignment
-
-	}
-
-	*offs_x = _x;
-	*w = _w;
-
-USE_VERT_ALIGN:
-	switch (vert_anker)
-	{
-	case VERTICAL_ALIGN_TOP:
-		_y = game::native::scrPlace->scaleVirtualToReal[1] * *offs_y + game::native::scrPlace->realViewableMin[1];
-		_h = game::native::scrPlace->scaleVirtualToReal[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_CENTER:
-		_y = game::native::scrPlace->scaleVirtualToReal[1] * *offs_y + game::native::scrPlace->realViewportSize[1] * 0.5f;
-		_h = game::native::scrPlace->scaleVirtualToReal[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_BOTTOM:
-		_y = game::native::scrPlace->scaleVirtualToReal[1] * *offs_y + game::native::scrPlace->realViewableMax[1];
-		_h = game::native::scrPlace->scaleVirtualToReal[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_FULLSCREEN:
-		_y = game::native::scrPlace->scaleVirtualToFull[1] * *offs_y;
-		_h = game::native::scrPlace->scaleVirtualToFull[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_NOSCALE:
-		return;
-
-	case VERTICAL_ALIGN_TO480:
-		_y = game::native::scrPlace->scaleRealToVirtual[1] * *offs_y;
-		_h = game::native::scrPlace->scaleRealToVirtual[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_CENTER_SAFEAREA:
-		_y = game::native::scrPlace->scaleVirtualToReal[1] * *offs_y + (game::native::scrPlace->realViewableMax[1] + game::native::scrPlace->realViewableMin[1]) * 0.5f;
-		_h = game::native::scrPlace->scaleVirtualToReal[1] * *h;
-		break;
-
-	case VERTICAL_ALIGN_SUBTOP:
-		_y = game::native::scrPlace->scaleVirtualToReal[1] * *offs_y;
-		_h = game::native::scrPlace->scaleVirtualToReal[1] * *h;
-		break;
-
-	default:
 		return;
 	}
-
-	*offs_y = _y;
-	*h = _h;
-}
-
-float mainmenu_fade_time = MAINMENU_INIT_FADE_TIME;
-float mainmenu_fade_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-void main_menu_fade_in()
-{
-	if (!game::native::Sys_IsMainThread() || game::native::glob::mainmenu_fade_done || !game::native::ui_context)
+	if (game::native::ui_context->openMenuCount == 2 && strcmp(game::native::ui_context->menuStack[1]->window.name, "main_text") != 0)
 	{
 		return;
 	}
 
-	if (mainmenu_fade_time >= 0.0f)
-	{
-		mainmenu_fade_time -= 0.5f;
-		mainmenu_fade_color[3] = (mainmenu_fade_time * (1.0f / MAINMENU_INIT_FADE_TIME));
+	auto buildSize = game::native::Dvar_FindVar("ui_buildSize");
+	auto smallFont = game::native::Dvar_FindVar("ui_smallFont");
+	auto extraBigFont = game::native::Dvar_FindVar("ui_extraBigFont");
+	auto bigFont = game::native::Dvar_FindVar("ui_bigFont");
+	fontscale = buildSize->current.value;
 
-		game::native::ConDraw_Box(mainmenu_fade_color, 0.0f, 0.0f,
-			static_cast<float>(game::native::ui_context->screenWidth),
-			static_cast<float>(game::native::ui_context->screenHeight));
+	ctx = 0;
+	size = game::native::scrPlace[ctx].scaleVirtualToReal[1] * fontscale;
 
-		return;
+	if (smallFont->current.value >= size) {
+		font = game::native::R_RegisterFont(FONT_SMALL, sizeof(FONT_SMALL));
+	}
+	else if (extraBigFont->current.value <= size) {
+		font = game::native::R_RegisterFont(FONT_EXTRA_BIG, sizeof(FONT_EXTRA_BIG));
+	}
+	else if (bigFont->current.value > size) {
+		font = game::native::R_RegisterFont(FONT_NORMAL, sizeof(FONT_NORMAL));
+	}
+	else {
+		font = game::native::R_RegisterFont(FONT_BIG, sizeof(FONT_BIG));
 	}
 
-	// reset fade vars
-	mainmenu_fade_time = MAINMENU_INIT_FADE_TIME;
-	mainmenu_fade_color[3] = 1.0f;
+	auto buildLocation = game::native::Dvar_FindVar("ui_buildLocation");
 
-	game::native::glob::mainmenu_fade_done = true;
-}
-// *
-// draw additional stuff to the main menu
-void main_menu()
-{
-	if (!game::native::Sys_IsMainThread())
-	{
-		return;
-	}
+	ypos = buildLocation->current.vector[1];
+	xpos = 450;
+	ypos -= 5.0;
 
-	const char* font;
-	const auto max = game::native::scrPlace->scaleVirtualToReal[1] * 0.3f;
+#ifdef DEBUG
+	xpos -= 20.0;
+	buildString = utils::string::va("%s %s\n", "YACC Debug:", VERSION);
+#else
+	buildString = utils::string::va("%s %s\n", "YACC:", VERSION);
+#endif
 
-	const auto ui_smallFont = game::native::Dvar_FindVar("ui_smallFont");
-	const auto ui_extraBigFont = game::native::Dvar_FindVar("ui_extraBigFont");
-	const auto ui_bigFont = game::native::Dvar_FindVar("ui_bigFont");
-
-	if (ui_smallFont && ui_smallFont->current.value < max)
-	{
-		if (ui_extraBigFont && ui_extraBigFont->current.value > max)
-		{
-			font = FONT_BIG;
-
-			if (ui_bigFont && ui_bigFont->current.value > max)
-			{
-				font = FONT_NORMAL;
-			}
-		}
-		else
-		{
-			font = FONT_EXTRA_BIG;
-		}
-	}
-	else
-	{
-		font = FONT_SMALL;
-	}
-
-	const auto font_handle = game::native::R_RegisterFont(font, sizeof(font));
-	if (!font_handle)
-	{
-		return;
-	}
-
-	float offs_x = 10.0f;
-	float offs_y = -10.0f;
-	const float scale = 0.25f;
-
-	float scale_x = scale * 48.0f / static_cast<float>(font_handle->pixelHeight);
-	float scale_y = scale_x;
-
-	// place container
-	scrplace_apply_rect(&offs_x, &scale_x, &offs_y, &scale_y, HORIZONTAL_ALIGN_LEFT, VERTICAL_ALIGN_BOTTOM);
-
-	const char* text_foreground = utils::string::va("YACC :: %s :: %s", VERSION, YACC_BUILDVERSION_DATE);
-	const char* text_background = text_foreground;
-
-	if (DEBUG)
-	{
-		text_foreground = utils::string::va("YACC :: %s :: %s :: %s", VERSION, YACC_BUILDVERSION_DATE, "^1DEBUG");
-		text_background = utils::string::va("YACC :: %s :: %s :: %s", VERSION, YACC_BUILDVERSION_DATE, "DEBUG");
-	}
-
-	// Background String
-	const float color_background[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-
-	game::native::R_AddCmdDrawTextASM(
-		/* txt */ text_background,
-		/* max */ 0x7FFFFFFF,
-		/* fot */ font_handle,
-		/*  x  */ offs_x + 3.0f,
-		/*  y  */ offs_y + 3.0f,
-		/* scX */ scale_x,
-		/* scY */ scale_y,
-		/* rot */ 0.0f,
-		/* col */ color_background,
-		/* sty */ 0);
-
-	// Foreground String
 	const float color_foreground[4] = { 1.0f, 0.8f, 0.7f, 1.0f };
+	//			client, string, length, font, x, y, horizontal, vertical, scale, color, style
+	UI_DrawText(&game::native::scrPlace[ctx], buildString, 64, font, xpos, ypos, 3, 0, fontscale, color_foreground, 0);
 
-	game::native::R_AddCmdDrawTextASM(
-		/* txt */ text_foreground,
-		/* max */ 0x7FFFFFFF,
-		/* fot */ font_handle,
-		/*  x  */ offs_x,
-		/*  y  */ offs_y,
-		/* scX */ scale_x,
-		/* scY */ scale_y,
-		/* rot */ 0.0f,
-		/* col */ color_foreground,
-		/* sty */ 0);
-
-	// fade in the menu on first start
-	main_menu_fade_in();
-
-
-	// *
-	// changelog gui
-
-	game::native::glob::loaded_main_menu = true;
-}
-
-// Main Menu Version (UI_VersionNumber Call in UI_Refresh)
-__declspec(naked) void main_menu_stub()
-{
-	__asm
-	{
-		call	main_menu;
-		push	0x53DC3A;
-		retn;
-	}
+	ypos += game::native::UI_TextHeight(font, fontscale);
 }
 
 /* ---------------------------------------------------------- */
-	/* ---------------------- aspect ratio ---------------------- */
+/* ---------------------- aspect ratio ---------------------- */
 
 void set_ultrawide_dvar(bool state)
 {
@@ -268,7 +93,7 @@ void set_custom_aspect_ratio()
 {
 	if (dvars::r_aspectRatio_custom)
 	{
-		*(float*)(0xCC9D0F8) = dvars::r_aspectRatio_custom->current.value;
+		*(float*)(0xCC8F640) = dvars::r_aspectRatio_custom->current.value;
 	}
 }
 
@@ -310,6 +135,78 @@ __declspec(naked) void aspect_ratio_custom_stub()
 	}
 }
 
+void __cdecl SCR_DrawSmallStringExt(signed int x, signed int y, const char* string, const float* setColor)
+{
+	float th;
+
+	auto consoleFont = game::native::R_RegisterFont(FONT_CONSOLE, sizeof(FONT_CONSOLE));
+	th = (float)game::native::R_TextHeight(consoleFont);
+	game::native::R_AddCmdDrawText(string, 0x7FFFFFFF, consoleFont, (float)x, (float)y + th, 1.0, 1.0, 0.0, setColor, 0);
+}
+
+void Con_DrawBuildString(float x, float y, float y2)
+{
+	auto buildString = utils::string::va("%s %s\n", "YACC Debug:", VERSION);
+	float colorYellow[4] = { 1, 1, 0, 1 };
+	float ydraw = y2 - 16.0 + y;
+	SCR_DrawSmallStringExt((signed int)x, (signed int)ydraw, buildString, colorYellow);
+}
+
+//void dump_gsc_script(const std::string& name, game::native::XAssetHeader header)
+//{
+//	if (!g_dump_scripts->current.enabled)
+//	{
+//		return;
+//	}
+//
+//	std::string buffer;
+//	buffer.append(header.data->name, strlen(header.scriptfile->name) + 1);
+//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->compressedLen), 4);
+//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->len), 4);
+//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->bytecodeLen), 4);
+//	buffer.append(header.scriptfile->buffer, header.scriptfile->compressedLen);
+//	buffer.append(header.scriptfile->bytecode, header.scriptfile->bytecodeLen);
+//
+//	const auto out_name = utils::string::va("gsc_dump/%s.gscbin", name.data());
+//	utils::io::write_file(out_name, buffer);
+//
+//	console::info("Dumped %s\n", out_name);
+//}
+
+game::native::XAssetHeader db_find_xasset_header_stub(game::native::XAssetType type, const char* name)
+{
+	auto result = db_find_xasset_header_hook.invoke<game::native::XAssetHeader>(type, name);
+
+	/*if (type == game::native::XAssetType::ASSET_TYPE_MENU)
+	{
+		dump_gsc_script(name, result);
+	}*/
+
+	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
+	{
+		if (!strcmp(name, "loadscreen"))
+		{
+			console::info("Found LOADSCREEN! %s\n", name);
+		}
+	}
+
+	if (type == game::native::XAssetType::ASSET_TYPE_RAWFILE)
+	{
+		if (result.rawfile)
+		{
+			const std::string override_rawfile_name = "override/"s + name;
+			const auto override_rawfile = db_find_xasset_header_hook.invoke<game::native::XAssetHeader>(type, override_rawfile_name.data());
+			if (override_rawfile.rawfile)
+			{
+				result.rawfile = override_rawfile.rawfile;
+				console::info("using override asset for rawfile: \"%s\"\n", name);
+			}
+		}
+	}
+
+	return result;
+}
+
 class ui final : public module
 {
 public:
@@ -320,16 +217,80 @@ public:
 
 	void post_load() override
 	{
-		// Main Menu Version (UI_VersionNumber Call in UI_Refresh)
-		utils::hook(0x53DC35, main_menu_stub, HOOK_JUMP).install()->quick();
+		utils::hook(0x53DB10, UI_DrawBuildString, HOOK_JUMP).install()->quick();
+
+		/* Build Number */
+		utils::hook(0x45DF84, Con_DrawBuildString, HOOK_JUMP).install()->quick();
+
+		// open / re-open the specified menu from uicontext->menus
+		command::add("menu_open", "<menu_name>", "open / re-open the specified menu from uicontext->menus", [](command::params params)
+		{
+			if (params.length() < 2)
+			{
+				game::native::Com_PrintMessage(0, "Usage :: menu_open <menu_name>\n", 0);
+				return;
+			}
+
+			if (!game::native::ui_context || !game::native::clientUI)
+			{
+				game::native::Com_PrintMessage(0, "uiContext | clientUI was null\n", 0);
+				return;
+			}
+
+			const char* name = params[1];
+			game::native::UiContext* ui = &game::native::ui_context[0];
+			game::native::clientUI->displayHUDWithKeycatchUI = true;
+
+			game::native::Menus_CloseByName(name, ui);
+			game::native::Menus_OpenByName(name, ui);
+		});
 
 
-		// disable drawing of upper arrow :: nop "UI_DrawHandlePic" call
-		utils::hook::nop(0x54D937, 5);
+		command::add("menu_open_ingame", "<menu_name>", "wip", [](command::params params)
+		{
+			if (const auto& cl_ingame = game::native::Dvar_FindVar("cl_ingame"); cl_ingame)
+			{
+				if (cl_ingame->current.enabled && game::native::ui_cg_dc)
+				{
+					const char* name = params[1];
+					game::native::UiContext* ui = &game::native::ui_cg_dc[0];
 
-		// disable drawing of lower arrow :: nop "UI_DrawHandlePic" call
-		utils::hook::nop(0x54D9F6, 5);
+					game::native::Key_SetCatcher();
+					game::native::Menus_OpenByName(name, ui);
+				}
+				else
+				{
+					game::native::Com_PrintMessage(0, "^1Not in-game\n", 0);
+				}
+			}
+		});
 
+		command::add("menu_closebyname", "<menu_name>", "close the specified menu", [](command::params params)
+		{
+			if (params.length() < 2)
+			{
+				game::native::Com_PrintMessage(0, "Usage :: menu_closebyname <menu_name>\n", 0);
+				return;
+			}
+
+			if (!game::native::ui_context)
+			{
+				game::native::Com_PrintMessage(0, "uiContext was null\n", 0);
+				return;
+			}
+
+			const char* name = params[1];
+			game::native::Menus_CloseByName(name, game::native::ui_context);
+
+
+			if (const auto& cl_ingame = game::native::Dvar_FindVar("cl_ingame"); cl_ingame)
+			{
+				if (cl_ingame->current.enabled && game::native::ui_cg_dc)
+				{
+					game::native::Menus_CloseByName(name, game::native::ui_cg_dc);
+				}
+			}
+		});
 
 		// *
 		// Display
@@ -340,13 +301,13 @@ public:
 		// Set custom aspect ratio by using the default switchcase in R_AspectRatio
 		utils::hook::nop(0x5D325B, 6);		utils::hook(0x5D325B, aspect_ratio_custom_stub, HOOK_JUMP).install()->quick();
 
-		dvars::r_aspectRatio_custom = game::native::Dvar_RegisterFloat(
-			/* name		*/ "r_aspectRatio_custom",
-			/* desc		*/ "description",
-			/* default	*/ 2.3333333f,
-			/* minVal	*/ 0.1f,
-			/* maxVal	*/ 10.0f,
-			/* flags	*/ game::native::dvar_flags::saved);
+		//dvars::r_aspectRatio_custom = game::native::Dvar_RegisterFloat(
+		//	/* name		*/ "r_aspectRatio_custom",
+		//	/* desc		*/ "description",
+		//	/* default	*/ 2.3333333f,
+		//	/* minVal	*/ 0.1f,
+		//	/* maxVal	*/ 10.0f,
+		//	/* flags	*/ game::native::dvar_flags::saved);
 
 		static std::vector <const char*> r_customAspectratio =
 		{
@@ -370,6 +331,10 @@ public:
 			/* desc		*/ "menu helper",
 			/* default	*/ false,
 			/* flags	*/ game::native::dvar_flags::read_only);
+
+		db_find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, db_find_xasset_header_stub);
+
+		db_print_default_assets = game::native::Dvar_RegisterBool("db_printDefaultAssets", "Print default asset usage", false, game::native::DVAR_FLAG_SAVED);
 	}
 };
 

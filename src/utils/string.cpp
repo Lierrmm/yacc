@@ -57,6 +57,33 @@ namespace utils::string
 		return false;
 	}
 
+	void strip(const char* in, char* out, size_t max)
+	{
+		if (!in || !out) return;
+
+		max--;
+		auto current = 0u;
+		while (*in != 0 && current < max)
+		{
+			const auto color_index = (*(in + 1) - 48) >= 0xC ? 7 : (*(in + 1) - 48);
+
+			if (*in == '^' && (color_index != 7 || *(in + 1) == '7'))
+			{
+				++in;
+			}
+			else
+			{
+				*out = *in;
+				++out;
+				++current;
+			}
+
+			++in;
+		}
+
+		*out = '\0';
+	}
+
 	std::wstring convert(const std::string& str)
 	{
 		std::wstring result;

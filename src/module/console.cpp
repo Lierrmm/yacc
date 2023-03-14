@@ -98,7 +98,7 @@ void console::log_message(const std::string& message)
 #ifdef _DEBUG
 	OutputDebugStringA(message.data());
 #endif
-	game::native::Conbuf_AppendText(message.data());
+	game::native::Conbuf_AppendText_ASM(message.data());
 }
 
 void console::dispatch_message([[maybe_unused]] const int type, const std::string& message)
@@ -139,4 +139,4 @@ std::string console::format(va_list* ap, const char* message)
 	return {buffer, static_cast<std::size_t>(count)};
 }
 
-//REGISTER_MODULE(console)
+REGISTER_MODULE(console)

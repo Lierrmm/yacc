@@ -89,4 +89,11 @@ namespace utils::cryptography
 		static unsigned int compute(const std::string& data);
 		static unsigned int compute(const char* key, size_t len);
 	};
+
+	namespace random
+	{
+		uint32_t get_integer();
+		std::string get_challenge();
+		void get_data(void* data, size_t size);
+	}
 }

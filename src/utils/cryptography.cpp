@@ -6,6 +6,123 @@
 
 namespace utils::cryptography
 {
+	namespace
+	{
+		struct __
+		{
+			__()
+			{
+				ltc_mp = ltm_desc;
+
+				register_cipher(&aes_desc);
+				register_cipher(&des3_desc);
+
+				register_prng(&sprng_desc);
+				register_prng(&fortuna_desc);
+				register_prng(&yarrow_desc);
+
+				register_hash(&sha1_desc);
+				register_hash(&sha256_desc);
+				register_hash(&sha512_desc);
+			}
+		} ___;
+
+		[[maybe_unused]] const char* cs(const uint8_t* data)
+		{
+			return reinterpret_cast<const char*>(data);
+		}
+
+		[[maybe_unused]] char* cs(uint8_t* data)
+		{
+			return reinterpret_cast<char*>(data);
+		}
+
+		[[maybe_unused]] const uint8_t* cs(const char* data)
+		{
+			return reinterpret_cast<const uint8_t*>(data);
+		}
+
+		[[maybe_unused]] uint8_t* cs(char* data)
+		{
+			return reinterpret_cast<uint8_t*>(data);
+		}
+
+		[[maybe_unused]] unsigned long ul(const size_t value)
+		{
+			return static_cast<unsigned long>(value);
+		}
+
+		class prng
+		{
+		public:
+			prng(const ltc_prng_descriptor& descriptor, const bool autoseed = true)
+				: state_(std::make_unique<prng_state>())
+				, descriptor_(descriptor)
+			{
+				this->id_ = register_prng(&descriptor);
+				if (this->id_ == -1)
+				{
+					throw std::runtime_error("PRNG "s + this->descriptor_.name + " could not be registered!");
+				}
+
+				if (autoseed)
+				{
+					this->auto_seed();
+				}
+				else
+				{
+					this->descriptor_.start(this->state_.get());
+				}
+			}
+
+			~prng()
+			{
+				this->descriptor_.done(this->state_.get());
+			}
+
+			prng_state* get_state() const
+			{
+				this->descriptor_.ready(this->state_.get());
+				return this->state_.get();
+			}
+
+			int get_id() const
+			{
+				return this->id_;
+			}
+
+			void add_entropy(const void* data, const size_t length) const
+			{
+				this->descriptor_.add_entropy(static_cast<const uint8_t*>(data), ul(length), this->state_.get());
+			}
+
+			void read(void* data, const size_t length) const
+			{
+				this->descriptor_.read(static_cast<unsigned char*>(data), ul(length), this->get_state());
+			}
+
+		private:
+			int id_;
+			std::unique_ptr<prng_state> state_;
+			const ltc_prng_descriptor& descriptor_;
+
+			void auto_seed() const
+			{
+				rng_make_prng(128, this->id_, this->state_.get(), nullptr);
+
+				int i[4]; // uninitialized data
+				auto* i_ptr = &i;
+				this->add_entropy(reinterpret_cast<uint8_t*>(&i), sizeof(i));
+				this->add_entropy(reinterpret_cast<uint8_t*>(&i_ptr), sizeof(i_ptr));
+
+				auto t = time(nullptr);
+				this->add_entropy(reinterpret_cast<uint8_t*>(&t), sizeof(t));
+			}
+		};
+
+		const prng prng_(fortuna_desc);
+	}
+
 	ecc::key::key()
 	{
 		ZeroMemory(&this->key_storage_, sizeof(this->key_storage_));
@@ -319,5 +436,25 @@ namespace utils::cryptography
 		hash ^= (hash >> 11);
 		hash += (hash << 15);
 		return hash;
+	}
+
+	uint32_t random::get_integer()
+	{
+		uint32_t result;
+		random::get_data(&result, sizeof(result));
+		return result;
+	}
+
+	std::string random::get_challenge()
+	{
+		std::string result;
+		result.resize(sizeof(uint32_t));
+		random::get_data(result.data(), result.size());
+		return string::dump_hex(result, "");
+	}
+
+	void random::get_data(void* data, const size_t size)
+	{
+		prng_.read(data, size);
 	}
 }

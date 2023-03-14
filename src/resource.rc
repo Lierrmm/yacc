@@ -88,14 +88,7 @@ END
 BINARY_SP RCDATA "resources/iw3sp.exe.diff"
 BINARY_MP RCDATA "resources/iw3mp.exe.diff"
 
-DW_HEATMAP  RCDATA "resources/dw/heatmap.raw"
-DW_MOTD     RCDATA "resources/dw/motd-english.txt"
-DW_IMG      RCDATA "resources/dw/online_mp.img"
-DW_WAD      RCDATA "resources/dw/online_tu14_mp_english.wad"
-DW_PLAYLIST RCDATA "resources/dw/playlists.aggr"
-DW_CONFIG   RCDATA "resources/dw/social_tu1.cfg"
-DW_IOTD_TXT RCDATA "resources/dw/iotd-english.txt"
-DW_IOTD_IMG RCDATA "resources/dw/iotd-english.jpg"
+IMAGE_SPLASH BITMAP "resources/splash.bmp"
 
 MENU_MAIN     RCDATA "resources/main.html"
 

@@ -30,6 +30,7 @@ private:
 	uint32_t last_dpi_ = 96;
 
 	WNDCLASSEX wc_{};
+
 	HWND handle_ = nullptr;
 	std::string classname_;
 	std::function<LRESULT(window*, UINT, WPARAM, LPARAM)> callback_;

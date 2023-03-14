@@ -1,11 +1,30 @@
 #include <std_include.hpp>
 #include "game.hpp"
 #include "dvars.hpp"
+#include <utils/string.hpp>
+
+
+#define s_cmdList (*((game::native::GfxCmdArray**)(0xCC8F678)))
+#define s_renderCmdBufferSize (*(int*)(0xCC9F49C))
+#define getcvaradr(adr) ((dvar_t*)(*(int*)(adr)))
+
+#define R_ADDCMD(m_cmd, m_cmdid) \
+	if ( s_cmdList->usedCritical - s_cmdList->usedTotal + s_renderCmdBufferSize - 0x2000 < sizeof(*m_cmd) ){	s_cmdList->lastCmd = 0; return;  } \
+	m_cmd = (GfxCmdDrawText2D*) &s_cmdList->cmds[s_cmdList->usedTotal]; s_cmdList->lastCmd = (GfxCmdHeader*) m_cmd; s_cmdList->usedTotal += sizeof(*m_cmd);	\
+	m_cmd->header.id = m_cmdid; m_cmd->header.byteCount = sizeof(*m_cmd)
+
+
+#define R_ADDDYNLENCMD(m_cmd, m_cmdid, m_cmddynlen) \
+	if ( s_cmdList->usedCritical - s_cmdList->usedTotal + s_renderCmdBufferSize - 0x2000 < sizeof(*m_cmd) + m_cmddynlen){	s_cmdList->lastCmd = 0; return NULL;  } \
+	m_cmd = (GfxCmdDrawText2D*) &s_cmdList->cmds[s_cmdList->usedTotal]; s_cmdList->lastCmd = (GfxCmdHeader*) m_cmd; s_cmdList->usedTotal += (sizeof(*m_cmd) + m_cmddynlen);	\
+	m_cmd->header.id = m_cmdid; m_cmd->header.byteCount = sizeof(*m_cmd) + m_cmddynlen
 
 namespace game
 {
 	namespace native
 	{
+		#define dvar_cheats getcvaradr(0xCB9F404)
+
 		decltype(longjmp)* _longjmp;
 
 		bool I_islower(int c)
@@ -32,7 +51,16 @@ namespace game
 
 			dvar->current.enabled = value;
 			dvar->latched.enabled = value;
-			//_dvar->modified = false;
+		}
+
+		void FS_DisplayPath(int bLanguageCull /*eax*/)
+		{
+			const static uint32_t FS_DisplayPath_func = 0x557BB0;
+			__asm
+			{
+				mov		eax, bLanguageCull;
+				Call	FS_DisplayPath_func;
+			}
 		}
 
 		// custom functions
@@ -40,45 +68,332 @@ namespace game
 			return Dvar_RegisterBool_r(dvar_name, dvar_type::DVAR_TYPE_BOOL, flags, description, default_value, 0, 0, 0, 0, 0);
 		}
 
-		inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
+		/*inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
 			return Dvar_RegisterFloat_r(dvarName, defaultValue, minValue, maxValue, flags, description);
+		}*/
+
+		inline dvar_t* Dvar_RegisterVec2(const char* dvar_name, const char* description, float x, float y, float min_value, float max_value, std::uint16_t flags) {
+			return Dvar_RegisterVec2_r(dvar_name, dvar_type::DVAR_TYPE_FLOAT_2, flags, description, x, y, 0, 0, min_value, max_value);
 		}
 
 		inline dvar_t* Dvar_RegisterEnum(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t enum_size, const char** enum_data, std::uint16_t flags) {
 			return Dvar_RegisterEnum_r(dvar_name, dvar_type::DVAR_TYPE_ENUM, flags, description, default_value, 0, 0, 0, enum_size, enum_data);
 		}
-		
-		void R_AddCmdDrawTextASM(const char* text, int max_chars, void* font, float x, float y, float x_scale, float y_scale, float rotation, const float* color, int style)
+				
+		void Cbuf_AddText(const char* text /*eax*/, int local_client_num /*ecx*/)
 		{
-			const static uint32_t R_AddCmdDrawText_func = 0x5D6700;
+			const static uint32_t Cbuf_AddText_func = 0x4F3930;
 			__asm
 			{
-				push	style;
-				sub     esp, 14h;
-
-				fld		rotation;
-				fstp[esp + 10h];
-
-				fld		y_scale;
-				fstp[esp + 0Ch];
-
-				fld		x_scale;
-				fstp[esp + 8];
-
-				fld		y;
-				fstp[esp + 4];
-
-				fld		x;
-				fstp[esp];
-
-				push	font;
-				push	max_chars;
-				push	text;
-				mov		ecx, [color];
-
-				call	R_AddCmdDrawText_func;
-				add		esp, 24h;
+				mov		ecx, local_client_num;
+				mov		eax, text;
+				call	Cbuf_AddText_func;
 			}
+		}
+
+		void Cmd_AddCommand(const char* name, void(*callback)(), cmd_function_s* data, char)
+		{
+			data->name = name;
+			data->args = nullptr;
+			data->description = nullptr;
+			data->function = callback;
+			data->next = *cmd_ptr;
+
+			*cmd_ptr = data;
+		}
+
+		void Cmd_AddCommand(const char* name, const char* args, const char* description, void(*callback)(), cmd_function_s* data, char)
+		{
+			data->name = name;
+			data->args = args;
+			data->description = description;
+			data->function = callback;
+			data->next = *cmd_ptr;
+
+			*cmd_ptr = data;
+		}
+
+		int String_Parse(const char** p /*eax*/, char* out_str, int len)
+		{
+			const static uint32_t String_Parse_func = 0x545B60;
+			__asm
+			{
+				push	len;
+				lea		eax, [out_str];
+				push	eax;
+				mov		eax, p;
+				call	String_Parse_func;
+				add		esp, 8;
+			}
+		}
+
+		void Menus_OpenByName(const char* menu_name, game::native::UiContext* ui_dc)
+		{
+			const static uint32_t Menus_OpenByName_func = 0x54B160;
+			__asm
+			{
+				pushad;
+				mov		esi, ui_dc;
+				mov		edi, menu_name;
+				call	Menus_OpenByName_func;
+				popad;
+			}
+		}
+
+		void Menus_CloseByName(const char* menu_name, game::native::UiContext* ui_dc)
+		{
+			const static uint32_t Menus_CloseByName_func = 0x546B70;
+			__asm
+			{
+				pushad;
+				mov		eax, menu_name;
+				mov		esi, ui_dc;
+				call	Menus_CloseByName_func;
+				popad;
+			}
+		}
+
+		void Menus_CloseAll(game::native::UiContext* ui_dc)
+		{
+			const static uint32_t Menus_CloseAll_func = 0x546B90;
+			__asm
+			{
+				pushad;
+				mov		esi, ui_dc;
+				Call	Menus_CloseAll_func;
+				popad;
+			}
+		}
+
+		int R_TextHeight(Font_s* font)
+		{
+			return font->pixelHeight;
+		}
+
+		int R_TextWidth(const char* text /*<eax*/, int maxChars, Font_s* font)
+		{
+			const static uint32_t R_TextWidth_func = 0x5D1B40;
+			__asm
+			{
+				push	font;
+				push	maxChars;
+				mov		eax, [text];
+				call	R_TextWidth_func;
+				add		esp, 8;
+			}
+		}
+
+		long double R_NormalizedTextScale(Font_s* font, float scale)
+		{
+			return (float)((float)(48.0 * scale) / (float)R_TextHeight(font));
+		}
+
+		int UI_TextWidth(const char* text, int maxChars, Font_s* font, float scale)
+		{
+			float normscale;
+
+			normscale = R_NormalizedTextScale(font, scale);
+			return (int)((float)R_TextWidth(text, maxChars, font) * normscale);
+		}
+
+
+		int UI_TextHeight(Font_s* font, float scale)
+		{
+			float normscale;
+
+			normscale = R_NormalizedTextScale(font, scale);
+			return (int)((float)R_TextHeight(font) * normscale);
+		}
+
+		void ScrPlace_ApplyRect(const ScreenPlacement* scrPlace, float* x, float* y, float* w, float* h, int horzAlign, int vertAlign)
+		{
+			float v7;
+			float v8;
+			float v9;
+			float v10;
+
+			switch (horzAlign)
+			{
+			case 7:
+				v7 = *x * scrPlace->scaleVirtualToReal[0];
+				v8 = (float)(scrPlace->realViewableMin[0] + scrPlace->realViewableMax[0]) * 0.5;
+				*x = v7 + v8;
+				*w = *w * scrPlace->scaleVirtualToReal[0];
+				break;
+			case 5:
+				break;
+			default:
+				*x = (float)(*x * scrPlace->scaleVirtualToReal[0]) + scrPlace->subScreenLeft;
+				*w = *w * scrPlace->scaleVirtualToReal[0];
+				break;
+			case 6:
+				*x = *x * scrPlace->scaleRealToVirtual[0];
+				*w = *w * scrPlace->scaleRealToVirtual[0];
+				break;
+			case 4:
+				*x = *x * scrPlace->scaleVirtualToFull[0];
+				*w = *w * scrPlace->scaleVirtualToFull[0];
+				break;
+			case 3:
+				*x = (float)(*x * scrPlace->scaleVirtualToReal[0]) + scrPlace->realViewableMax[0];
+				*w = *w * scrPlace->scaleVirtualToReal[0];
+				break;
+			case 2:
+				v7 = *x * scrPlace->scaleVirtualToReal[0];
+				v8 = 0.5 * scrPlace->realViewportSize[0];
+				*x = v7 + v8;
+				*w = *w * scrPlace->scaleVirtualToReal[0];
+				break;
+			case 1:
+				*x = (float)(*x * scrPlace->scaleVirtualToReal[0]) + scrPlace->realViewableMin[0];
+				*w = *w * scrPlace->scaleVirtualToReal[0];
+				break;
+			}
+
+			switch (vertAlign)
+			{
+			case 7:
+				v9 = *y * scrPlace->scaleVirtualToReal[1];
+				v10 = (float)(scrPlace->realViewableMin[1] + scrPlace->realViewableMax[1]) * 0.5;
+				*y = v9 + v10;
+				*h = *h * scrPlace->scaleVirtualToReal[1];
+			case 5:
+				return;
+			default:
+				*y = *y * scrPlace->scaleVirtualToReal[1];
+				*h = *h * scrPlace->scaleVirtualToReal[1];
+				break;
+			case 1:
+				*y = (float)(*y * scrPlace->scaleVirtualToReal[1]) + scrPlace->realViewableMin[1];
+				*h = *h * scrPlace->scaleVirtualToReal[1];
+				break;
+			case 6:
+				*y = *y * scrPlace->scaleRealToVirtual[1];
+				*h = *h * scrPlace->scaleRealToVirtual[1];
+				break;
+			case 4:
+				*y = *y * scrPlace->scaleVirtualToFull[1];
+				*h = *h * scrPlace->scaleVirtualToFull[1];
+				break;
+			case 3:
+				*y = (float)(*y * scrPlace->scaleVirtualToReal[1]) + scrPlace->realViewableMax[1];
+				*h = *h * scrPlace->scaleVirtualToReal[1];
+				break;
+			case 2:
+				v9 = *y * scrPlace->scaleVirtualToReal[1];
+				v10 = 0.5 * scrPlace->realViewportSize[1];
+				*y = v9 + v10;
+				*h = *h * scrPlace->scaleVirtualToReal[1];
+				break;
+			}
+		}
+
+		uint8_t ByteFromFloatColor(float from)
+		{
+			int intcolor = from * 0xff;
+			if (intcolor < 0)
+			{
+				intcolor = 0;
+			}
+			else if (intcolor > 0xff)
+			{
+				intcolor = 0xff;
+			}
+			return intcolor;
+		}
+
+
+		void Byte4PackVertexColor(const float* from, uint8_t* to)
+		{
+			to[2] = ByteFromFloatColor(from[0]);
+			to[1] = ByteFromFloatColor(from[1]);
+			to[0] = ByteFromFloatColor(from[2]);
+			to[3] = ByteFromFloatColor(from[3]);
+		}
+
+		void R_ConvertColorToBytes(const float* colorFloat, GfxColor* color)
+		{
+			if (colorFloat == NULL)
+			{
+				color->packed = 0xffffffff;
+				return;
+			}
+			Byte4PackVertexColor(colorFloat, color->array);
+		}
+
+		GfxCmdDrawText2D* R_AddCmdDrawTextWithCursor(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation, const float* color, int style, signed int cursorPos, char cursor)
+		{
+			unsigned int textlen;
+			unsigned int extralen;
+			GfxCmdDrawText2D* cmd;
+
+
+			if (!*text && cursorPos < 0)
+			{
+				return NULL;
+			}
+			textlen = strlen(text);
+			extralen = (textlen + 1) & 0xFFFFFFFC;
+
+			R_ADDDYNLENCMD(cmd, 13, extralen);
+
+			cmd->x = x;
+			cmd->y = y;
+#if 0
+			cmd->w = 1.0; //old cod4 does not have this
+			cmd->fxRedactDecayStartTime = 0;
+			cmd->fxRedactDecayDuration = 0;
+#endif
+			cmd->rotation = rotation;
+			cmd->font = font;
+			cmd->xScale = xScale;
+			cmd->yScale = yScale;
+			R_ConvertColorToBytes(color, &cmd->color);
+			cmd->maxChars = maxChars;
+			cmd->renderFlags = 0;
+			switch (style)
+			{
+			case 3:
+				cmd->renderFlags = 4;
+				break;
+			case 6:
+				cmd->renderFlags = 12;
+				break;
+			case 128:
+				cmd->renderFlags = 1;
+				break;
+			}
+			if (cursorPos >= 0)
+			{
+				cmd->renderFlags |= 2u;
+				cmd->cursorPos = cursorPos;
+				cmd->cursorLetter = cursor;
+			}
+			memcpy(cmd->text, text, textlen);
+			cmd->text[textlen] = 0;
+			return cmd;
+		}
+
+		void _R_AddCmdDrawText(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation, const float* color, int style)
+		{
+			R_AddCmdDrawTextWithCursor(text, maxChars, font, x, y, xScale, yScale, rotation, color, style, -1, 0);
+		}
+
+		void UI_DrawText(const ScreenPlacement* scrPlace, const char* text, int maxChars, Font_s* font, float ix, float iy, int horzAlign, int vertAlign, float scale, const float* color, int style)
+		{
+			long double nScale;
+			float x;
+			float y;
+			float yScale;
+			float xScale;
+
+			nScale = R_NormalizedTextScale(font, scale);
+			xScale = nScale;
+			yScale = nScale;
+			ScrPlace_ApplyRect(scrPlace, &ix, &iy, &xScale, &yScale, horzAlign, vertAlign);
+			x = floor(ix + 0.5);
+			y = floor(iy + 0.5);
+			_R_AddCmdDrawText(text, maxChars, font, x, y, xScale, yScale, 0.0, color, style);
 		}
 
 		void ConDraw_Box(float* color, float x, float y, float width, float height)
@@ -106,6 +421,170 @@ namespace game
 				add		esp, 10h;
 				popad;
 			}
+		}
+
+		const char* Win_GetLanguage()
+		{
+			return game::native::localization->language;
+		}
+
+		int Q_CountChar(const char* string, char tocount)
+		{
+			int count;
+
+			for (count = 0; *string; string++)
+			{
+				if (*string == tocount)
+					count++;
+			}
+
+			return count;
+		}
+
+		bool sub_503A80(const char* a1, netadr_t* a2)
+		{
+			char	base[1024], *search;
+			char* port = NULL;
+
+			if (!strcmp(a1, "localhost")) {
+				memset(a2, 0, sizeof(*a2));
+				a2->type = NA_LOOPBACK;
+				// as NA_LOOPBACK doesn't require ports report port was given.
+				return true;
+			}
+
+			strncpy(base, a1, sizeof(base) - 1);
+			base[sizeof(base) - 1] = 0;
+
+			if (*base == '[' || Q_CountChar(base, ':') > 1)
+			{
+				// This is an ipv6 address, handle it specially.
+				search = strchr(base, ']');
+				if (search)
+				{
+					*search = '\0';
+					search++;
+
+					if (*search == ':')
+						port = search + 1;
+				}
+
+				if (*base == '[')
+					search = base + 1;
+				else
+					search = base;
+			}
+			else
+			{
+				// look for a port number
+				port = strchr(base, ':');
+
+				if (port) {
+					*port = '\0';
+					port++;
+				}
+
+				search = base;
+			}
+
+			auto lookup = game::native::NET_StringToAdr(a1, a2);
+			return lookup;
+		}
+
+		const char* UI_SafeTranslateString(const char* name)
+		{
+			const static uint32_t oUI_SafeTranslateString = 0x5452F0;
+			__asm
+			{
+				mov eax, [name];
+				call oUI_SafeTranslateString;
+			}
+		}
+
+		const char* UI_GetCurrentGameType()
+		{
+			return game::native::GetModeName(game::native::serverMode);
+		}
+
+		const char* UI_GetCurrentMapName()
+		{
+			return game::native::GetMapName(game::native::serverMap);
+		}
+
+		unsigned int R_HashString(const char* string)
+		{
+			unsigned int hash = 0;
+
+			while (*string)
+			{
+				hash = (*string | 0x20) ^ (33 * hash);
+				++string;
+			}
+
+			return hash;
+		}
+
+		void Conbuf_AppendText_ASM(const char* string)
+		{
+			const static uint32_t Conbuf_AppendText_func = 0x574E40;
+			__asm
+			{
+				mov		ecx, string;
+				call Conbuf_AppendText_func;
+			}
+		}
+
+		float Vec3Normalize(vec3_t& vec)
+		{
+			const auto length = std::sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+
+			if (length > 0.0f)
+			{
+				vec[0] /= length;
+				vec[1] /= length;
+				vec[2] /= length;
+			}
+
+			return length;
+		}
+
+		void Vec2UnpackTexCoords(const PackedTexCoords in, vec2_t* out)
+		{
+			unsigned int v3; // xmm1_4
+
+			if (LOWORD(in.packed))
+				v3 = ((in.packed & 0x8000) << 16) | (((((in.packed & 0x3FFF) << 14) - (~(LOWORD(in.packed) << 14) & 0x10000000)) ^ 0x80000001) >> 1);
+			else
+				v3 = 0;
+
+			(*out)[0] = *reinterpret_cast<float*>(&v3);
+
+			if (HIWORD(in.packed))
+				v3 = ((HIWORD(in.packed) & 0x8000) << 16) | (((((HIWORD(in.packed) & 0x3FFF) << 14)
+					- (~(HIWORD(in.packed) << 14) & 0x10000000)) ^ 0x80000001) >> 1);
+			else
+				v3 = 0;
+
+			(*out)[1] = *reinterpret_cast<float*>(&v3);
+		}
+
+		void MatrixVecMultiply(const float(&mulMat)[3][3], const vec3_t& mulVec, vec3_t& solution)
+		{
+			vec3_t res;
+			res[0] = mulMat[0][0] * mulVec[0] + mulMat[1][0] * mulVec[1] + mulMat[2][0] * mulVec[2];
+			res[1] = mulMat[0][1] * mulVec[0] + mulMat[1][1] * mulVec[1] + mulMat[2][1] * mulVec[2];
+			res[2] = mulMat[0][2] * mulVec[0] + mulMat[1][2] * mulVec[1] + mulMat[2][2] * mulVec[2];
+			std::memmove(&solution[0], &res[0], sizeof(res));
+		}
+
+		void Vec3UnpackUnitVec(PackedUnitVec in, vec3_t& out)
+		{
+			float decodeScale;
+
+			decodeScale = (in.array[3] - -192.0) / 32385.0;
+			out[0] = (in.array[0] - 127.0) * decodeScale;
+			out[1] = (in.array[1] - 127.0) * decodeScale;
+			out[2] = (in.array[2] - 127.0) * decodeScale;
 		}
 
 		namespace glob

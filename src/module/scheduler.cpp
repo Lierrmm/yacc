@@ -93,23 +93,39 @@ void scheduler::execute(const pipeline type)
 	pipelines[type].execute();
 }
 
-void scheduler::r_end_frame_stub()
-{
-	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840));
-	execute(pipeline::renderer);
-}
+//void scheduler::r_end_frame_stub()
+//{
+//	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840));
+//	execute(pipeline::renderer);
+//}
+//
+//void scheduler::g_glass_update_stub()
+//{
+//	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0));
+//	execute(pipeline::server);
+//}
+//
+//void scheduler::main_frame_stub()
+//{
+//	utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x4FA8F0));
+//	execute(pipeline::main);
+//}
 
-void scheduler::g_glass_update_stub()
-{
-	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0));
-	execute(pipeline::server);
-}
+__declspec(naked) void scheduler::main_frame_stub()
+	{
+		static const int execution_thread = pipeline::main;
+		const static uint32_t retn_addr = 0x4FA8F0;
+		__asm
+		{
+			pushad;
+			push	execution_thread;
+			call	execute;
+			pop		eax;
+			popad;
 
-void scheduler::main_frame_stub()
-{
-	utils::hook::invoke<void>(SELECT_VALUE(0x458600, 0x556470));
-	execute(pipeline::main);
-}
+			jmp		retn_addr;
+		}
+	}
 
 void scheduler::schedule(const std::function<bool()>& callback, const pipeline type,
 	const std::chrono::milliseconds delay)
@@ -144,6 +160,7 @@ void scheduler::once(const std::function<void()>& callback, const pipeline type,
 	}, type, delay);
 }
 
+
 void scheduler::post_start()
 {
 	thread = utils::thread::create_named_thread("Async Scheduler", []()
@@ -158,7 +175,7 @@ void scheduler::post_start()
 
 void scheduler::post_unpack()
 {
-	//utils::hook(SELECT_VALUE(0x44C7DB, 0x55688E), main_frame_stub, HOOK_CALL).install()->quick();
+	utils::hook(SELECT_VALUE(0x0, 0x4FACE8), main_frame_stub, HOOK_CALL).install()->quick();
 
 	//utils::hook(SELECT_VALUE(0x57F7F8, 0x4978E2), r_end_frame_stub, HOOK_CALL).install()->quick();
 
@@ -175,4 +192,4 @@ void scheduler::pre_destroy()
 	}
 }
 
-//REGISTER_MODULE(scheduler);
+REGISTER_MODULE(scheduler);

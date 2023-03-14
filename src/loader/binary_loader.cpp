@@ -119,8 +119,6 @@ namespace binary_loader
 			{
 				result = current_result;
 			}
-
-			printf("%s\n", result.data());
 		}
 
 		utils::io::write_file(file + ".diff", result);

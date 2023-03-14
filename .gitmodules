@@ -37,3 +37,6 @@
 	path = deps/gsc-tool
 	url = https://github.com/xensik/gsc-tool.git
 	branch = dev
+[submodule "deps/dxsdk"]
+	path = deps/dxsdk
+	url = https://github.com/devKlausS/dxsdk.git

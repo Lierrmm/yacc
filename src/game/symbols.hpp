@@ -64,19 +64,53 @@ namespace game
 	namespace native
 	{
 		WEAK symbol < void()> Sys_ShowConsole{ 0x0, 0x574DC0 };
-		WEAK symbol < void* (const char* message)> Conbuf_AppendText{ 0x0, 0x574E40 };
+		WEAK symbol < void (const char* message)> Conbuf_AppendText{ 0x0, 0x574E40 };
 		WEAK symbol < void* (LocalClientNum_t localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{ 0x0, 0x4F4660 };
-		WEAK symbol <dvar_t* (const char* dvarName)> Dvar_FindMalleableVar { 0x0, 0x565C80 };
+		WEAK symbol <dvar_t* (const char* dvarName)> Dvar_FindMalleableVar{ 0x0, 0x565C80 };
 		WEAK symbol <Font_s* (const char* fontName, int fontSize)> R_RegisterFont{ 0x0, 0x5D1B20 };
 		WEAK symbol <void()> Sys_InitMainThread{ 0x0, 0x505D70 };
 		WEAK symbol <bool()> Sys_IsMainThread{ 0x0, 0x506110 };
+		WEAK symbol <void()> RegisterDvars{ 0x0, 0x53C220 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_bool, std::uint16_t flags, const char* description, std::int32_t default_value, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t null4, std::int32_t null5)> Dvar_RegisterBool_r{ 0x0, 0x5667F0 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_enum, std::uint16_t flags, const char* description, std::int32_t default_index, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t enumSize, const char** enum_data)> Dvar_RegisterEnum_r{ 0x0, 0x5667F0 };
-		WEAK symbol <dvar_t* (const char* dvar_name, float default_value, float min_value, float max_value, std::uint16_t flags, const char* description)> Dvar_RegisterFloat_r{ 0x0, 0x566B70 };
+		//WEAK symbol <dvar_t* (const char* dvar_name, float default_value, float min_value, float max_value, std::uint16_t flags, const char* description)> Dvar_RegisterFloat_r{ 0x0, 0x566B70 };
+		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_float2, std::uint16_t flags, const char* description, float x, float y, std::int32_t null1, std::int32_t null2, float min, float max)> Dvar_RegisterVec2_r{ 0x0, 0x5667F0 };
+
+		WEAK symbol <void(int, const char*, char)> Com_PrintMessage{ 0x0, 0x4F75E0 };
+		WEAK symbol <void(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation, const float* color, int style)> R_AddCmdDrawText{ 0x0, 0x5D6700 };
+		WEAK symbol <void()> Key_SetCatcher{ 0x0, 0x464A80 };
+		WEAK symbol <const char*()> Sys_DefaultInstallPath{ 0x0, 0x56D480 };
+		WEAK symbol <void(const char* map)> LoadMapLoadScreenInternal{ 0x0, 0x466C00 };
+		WEAK symbol<void(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{ 0x0, 0x567830 };
+		WEAK symbol<bool(const char* address, netadr_t* adr)> NET_StringToAdr{ 0, 0x503A80 };
+
+		WEAK symbol<const char* (const char* mode)> GetModeName { 0x0, 0x53E3E0 };
+		WEAK symbol<const char* (const char* map)> GetMapName { 0x0, 0x53E310 };
+
+		WEAK symbol<XAssetHeader(XAssetType type, const char* name)> DB_FindXAssetHeader { 0x0, 0x484A50 };
+		WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault { 0x0, 0x484D80 };
+		WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)> 
+			DB_EnumXAssets_Internal{ 0x0, 0x484600 };
 
 		// symbols
-		WEAK symbol<ScreenPlacement> scrPlace {0x0, 0x42A0B3};
-		WEAK symbol<UiContext> ui_context{0x0, 0xCAE6200};
+		WEAK symbol<bool> CL_IsCgameInitialized{ 0x0, 0xC578F6 };
+		WEAK symbol<ScreenPlacement> scrPlaceFull { 0x0, 0xE2C420 };
+		WEAK symbol<ScreenPlacement> scrPlace{ 0x0, 0xE2C3D8 };
+		WEAK symbol<UiContext> ui_context{ 0x0, 0xCAE6200 };
+		WEAK symbol<UiContext> ui_cg_dc{ 0x0, 0x73EFA8 };
+		WEAK symbol<CmdArgs> cmd_args{ 0x0, 0x1408B40 };
+		WEAK symbol<cmd_function_s*> cmd_ptr{ 0x0, 0x1408B3C };
 
+		WEAK symbol<PlayerKeyState> playerKeys{ 0x0, 0x8E9DB8 };
+		WEAK symbol<clientUIActive_t> clientUI{ 0x0, 0xC578F4 };
+		WEAK symbol<localization_t> localization{ 0x0, 0xCC0C7D4 };
+		WEAK symbol<cg_s> cgs{ 0x0, 0x746338 };
+		WEAK symbol<int> svs_clientCount{ 0, 0x1CB7C8C };
+
+		WEAK symbol<const char> serverMode { 0x0, 0x742928 };
+		WEAK symbol<const char> serverMap { 0x0, 0xCADE158 };
+
+		WEAK symbol<const char*> g_assetNames{ 0x0, 0x71E838 };
+		WEAK symbol<netadr_t> serverAddress{ 0x0, 0x8ECCF0 };
 	}
 }

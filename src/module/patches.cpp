@@ -4,8 +4,12 @@
 #include "console.hpp"
 #include "scheduler.hpp"
 
+#include "version.hpp"
+
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
+#include <utils/string.hpp>
+#include "command.hpp"
 
 void force_dvars_on_init()
 {
@@ -185,6 +189,176 @@ __declspec(naked) void FS_MakeIWDsLocalized()
 	}
 }
 
+// on renderer initialization
+void print_loaded_modules()
+{
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
+
+	game::native::Com_PrintMessage(0, utils::string::va("-------------- Loaded Modules -------------- \n%s\n", game::native::glob::loaded_modules.c_str()), 0);
+
+	// add FS Path output print
+	if (const auto& dedicated = game::native::Dvar_FindVar("dedicated");
+		dedicated && dedicated->current.integer == 0)
+	{
+		game::native::FS_DisplayPath(1);
+	}
+}
+
+__declspec(naked) void CL_PreInitRenderer_stub()
+{
+	const static uint32_t CL_PreInitRenderer_func = 0x4690C0;
+	const static uint32_t retn_addr = 0x46B25F;
+	__asm
+	{
+		pushad;
+		call	print_loaded_modules;
+		popad;
+
+		call	CL_PreInitRenderer_func;
+		jmp		retn_addr;
+	}
+}
+
+// r_init
+__declspec(naked) void console_printfix_stub_01()
+{
+	const static uint32_t retn_addr = 0x5D4AF6;
+	const static char* print = "\n-------------- R_Init --------------\n";
+	__asm
+	{
+		push	print;
+		jmp		retn_addr;
+	}
+}
+
+// working directory
+__declspec(naked) void console_printfix_stub_02()
+{
+	const static uint32_t retn_addr = 0x571DA2;
+	const static char* print = "Working directory: %s\n\n";
+	__asm
+	{
+		push	print;
+		jmp		retn_addr;
+	}
+}
+
+// server initialization
+__declspec(naked) void console_printfix_stub_03()
+{
+	const static uint32_t retn_addr = 0x52A023;
+	const static char* print = "\n------- Server Initialization ---------\n";
+	__asm
+	{
+		push	print;
+		jmp		retn_addr;
+	}
+}
+
+// helper function because cba to do that in asm
+void print_build_on_init()
+{
+	game::native::Com_PrintMessage(0, "\n-------- Game Initialization ----------\n", 0);
+	game::native::Com_PrintMessage(0, utils::string::va("> Build: YACC %s :: %s\n", VERSION, __TIMESTAMP__), 0);
+}
+
+// game init + game name and version
+__declspec(naked) void console_printfix_stub_04()
+{
+	const static uint32_t retn_addr = 0x4BA28F;
+	__asm
+	{
+		pushad;
+		call	print_build_on_init;
+		popad;
+
+		jmp		retn_addr;
+	}
+}
+
+const char* Con_LinePrefix()
+{
+	return ">";
+}
+
+void FS_ReplaceSeparators(char* path) {
+	char* s;
+
+	for (s = path; *s; s++) {
+		if (*s == '/' || *s == '\\') {
+			*s = '\\';
+		}
+	}
+}
+
+int __cdecl FileWrapper_GetFileSize(FILE* h)
+{
+	int startPos;
+	int fileSize;
+
+	startPos = ftell(h);
+	fseek(h, 0, SEEK_END);
+	fileSize = ftell(h);
+	fseek(h, startPos, SEEK_SET);
+	return fileSize;
+}
+
+int __cdecl FS_FileGetFileSize(FILE* file)
+{
+	return FileWrapper_GetFileSize(file);
+}
+
+int FS_FileLengthOSPathByName(const char* osPath) {
+
+	FILE* fh = fopen(osPath, "rb");
+
+	if (fh == NULL)
+		return -1;
+
+	int len = FS_FileGetFileSize(fh);
+
+	fclose(fh);
+	return len;
+
+}
+
+bool DB_FileExistsLoadscreen(const char* fileName)
+{
+	auto mapname = std::string(utils::string::va("%s", fileName));
+
+	char* find = strstr(mapname.data(), "_load");
+	if (find)
+	{
+		find[0] = '\0';
+	}
+
+	auto path = std::string(utils::string::va("%s/zone/%s/%s_load.ff", game::native::Sys_DefaultInstallPath(), game::native::Win_GetLanguage(), mapname.data()));
+
+	FS_ReplaceSeparators(path.data());
+	if (FS_FileLengthOSPathByName(path.data()) > 50)
+	{
+		return true;
+	}
+
+	path = std::string(utils::string::va("%s/usermaps/%s/%s_load.ff", game::native::Sys_DefaultInstallPath(), mapname.data(), mapname.data()));
+	FS_ReplaceSeparators(path.data());
+	if (FS_FileLengthOSPathByName(path.data()) > 50)
+	{
+		return true;
+	}
+	return false;
+}
+
+__declspec(naked) void LoadMapLoadscreen(const char* name)
+{
+	if (DB_FileExistsLoadscreen(name))
+	{
+		game::native::LoadMapLoadScreenInternal(name);
+	}
+}
+
+
 class patches final : public module
 {
 public:
@@ -195,6 +369,9 @@ public:
 
 	void post_load() override
 	{
+		/* Overrides error in CG_Init() about bad client/server game */
+		utils::hook::nop(0x43D40C, 5);
+
 		// increase hunkTotal from 10mb to 15mb
 		utils::hook::set<BYTE>(0x55E091 + 8, 0xF0);
 
@@ -218,6 +395,108 @@ public:
 		utils::hook::nop(0x556673, 30);
 
 		utils::hook(0x558254, FS_MakeIWDsLocalized, HOOK_JUMP).install()->quick();
+
+
+		// More
+		// Force debug logging
+		utils::hook::nop(0x4F772C, 8);
+
+		// Enable console log
+		utils::hook::nop(0x4F7732, 2);
+
+		// Ignore hardware changes
+		utils::hook::set<DWORD>(0x570E7B, 0xC359C032);
+		utils::hook::set<DWORD>(0x570DA1, 0xC359C032);
+
+		// Remove improper quit popup
+		utils::hook::set<BYTE>(0x571AF6, 0xEB);
+
+		// Fix microphone shit
+		utils::hook::set<BYTE>(0x575145, 0xEB);
+		utils::hook::nop(0x4E7F26, 5);
+
+		// Disable AutoUpdate Check?
+		utils::hook::nop(0x4D217C, 5);
+
+		// Disable developer check for Alt + Enter
+		utils::hook::nop(0x57650E, 2);
+
+		// Precaching beyond level load
+		utils::hook::nop(0x4DCB06, 2); // model 1
+		utils::hook::set<BYTE>(0x4DCB72, 0xEB); // model 2
+
+		// (c) Snake :: Fix mouse lag by moving SetThreadExecutionState call out of event loop
+		utils::hook::nop(0x57616C, 8);
+		/*scheduler::on_frame([]()
+		{
+			SetThreadExecutionState(ES_DISPLAY_REQUIRED);
+		});*/
+
+
+		// *
+		// Console prints
+
+		// Print loaded modules to console
+		utils::hook(0x46B25A, CL_PreInitRenderer_stub, HOOK_JUMP).install()->quick();
+
+		// Remove "setstat: developer_script must be false"
+		utils::hook::nop(0x46B255, 5);
+
+		// Add newlines 
+		utils::hook(0x5D4AF1, console_printfix_stub_01, HOOK_JUMP).install()->quick();
+		utils::hook(0x571D9D, console_printfix_stub_02, HOOK_JUMP).install()->quick();
+		utils::hook(0x52A01E, console_printfix_stub_03, HOOK_JUMP).install()->quick();
+		utils::hook(0x4BA28A, console_printfix_stub_04, HOOK_JUMP).install()->quick();
+		utils::hook::nop(0x4BA29B, 5); // gamename
+		utils::hook::nop(0x4BA2AC, 5); // gamedate
+
+		// *
+		// Fix fps on windows 10 (stuck at 500) :: sleep(1) to sleep(0)
+
+		utils::hook::set<BYTE>(0x4FA9D4 + 1, 0x0);
+		utils::hook::set<BYTE>(0x4FAA3F + 1, 0x0);
+
+
+		command::add("menu_list", "", "print all loaded menus to the console", [this](command::params)
+		{
+			if (!game::native::ui_context || !*game::native::ui_context->Menus)
+			{
+				return;
+			}
+
+			game::native::Com_PrintMessage(0, "^2menu list:\n", 0);
+
+			for (int i = 0; i < game::native::ui_context->menuCount; i++)
+			{
+				game::native::Com_PrintMessage(0, utils::string::va("|> %s \n", game::native::ui_context->Menus[i]->window.name), 0);
+			}
+
+			// # in-game menus
+
+			if (const auto& cl_ingame = game::native::Dvar_FindVar("cl_ingame"); cl_ingame)
+			{
+				if (cl_ingame->current.enabled && game::native::ui_cg_dc)
+				{
+					game::native::Com_PrintMessage(0, "^2in-game menu list:\n", 0);
+
+					for (int i = 0; i < game::native::ui_cg_dc->menuCount; i++)
+					{
+						game::native::Com_PrintMessage(0, utils::string::va("|> %s \n", game::native::ui_cg_dc->Menus[i]->window.name), 0);
+					}
+				}
+			}
+		});
+
+		utils::hook::set<uint8_t>(0x4643A2, 0xEB);
+
+		utils::hook(0x45C8F5, Con_LinePrefix, HOOK_CALL).install()->quick();
+
+		//utils::hook::nop(0x429719, 1033);
+		//utils::hook(0x429719, CG_InitConsoleCommandsPatched, HOOK_CALL).install()->quick();
+		//utils::hook(0x46BB6C, LoadMapLoadscreen, HOOK_CALL).install()->quick();
+
+		// remove MAX_PACKET_CMDs com_error
+		utils::hook::nop(0x4603D3, 5);
 	}
 };
 
