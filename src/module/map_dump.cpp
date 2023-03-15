@@ -389,7 +389,7 @@ private:
 		}
 		else
 		{
-			if (image && std::string(image->name).length() > 0) 
+			if (image && std::string(image->name).length() > 0)
 			{
 				std::string _name = utils::string::va("raw/mapdump/%s/textures/%s.png", this->world_->baseName, image->name);
 				D3DXSaveTextureToFileA(_name.data(), D3DXIFF_PNG, image->texture.map, nullptr);
@@ -480,7 +480,7 @@ public:
 					*reinterpret_cast<game::native::GfxWorld**>(world) = header.gfxWorld;
 				}, &world, false);
 
-			if (world)
+			if (world && *game::native::CL_IsCgameInitialized)
 			{
 				console::info("Attempting to export Map '%s'\n", world->baseName);
 				MapDumper dumper(world);
