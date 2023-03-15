@@ -184,6 +184,11 @@ int main()
 				if (mode == launcher::mode::none) return 0;
 			}
 
+			if (mode == launcher::mode::singleplayer)
+			{
+				throw std::runtime_error("Singleplayer not supported yet");
+			}
+
 			entry_point = load_binary(mode);
 			if (!entry_point)
 			{
