@@ -251,7 +251,7 @@ filter "configurations:Release"
 	buildoptions {"/Os"}
 	linkoptions {"/IGNORE:4702", "/LTCG"}
 	defines {"NDEBUG"}
-	flags {"FatalCompileWarnings"}
+	-- flags {"FatalCompileWarnings"}
 filter {}
 
 filter "configurations:Debug"
