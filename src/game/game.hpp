@@ -7,6 +7,10 @@
 
 #define SERVER_CD_KEY "YACC-CD-Key"
 
+// *
+// Common
+#define FF_LOAD_ADDON_MENU		false
+#define FF_ADDON_MENU_NAME		"xcommon_yacc_menu"
 
 namespace game
 {
@@ -72,8 +76,6 @@ namespace game
 		extern void Menus_CloseByName(const char* menu_name, game::native::UiContext* ui_dc);
 		extern void Menus_CloseAll(game::native::UiContext* ui_dc);
 
-		extern bool sub_503A80(const char* a1, netadr_t* a2);
-
 		extern const char* UI_SafeTranslateString(const char* name);
 
 		extern const char* UI_GetCurrentMapName();
@@ -88,6 +90,10 @@ namespace game
 		extern void Vec2UnpackTexCoords(const PackedTexCoords in, vec2_t* out);
 		extern void MatrixVecMultiply(const float(&mulMat)[3][3], const vec3_t& mulVec, vec3_t& solution);
 		extern void Vec3UnpackUnitVec(PackedUnitVec in, vec3_t& out);
+
+		extern XAssetHeader db_realloc_xasset_pool(XAssetType type, unsigned int new_size);
+
+		extern bool DB_FileExists(const char* file_name, game::native::DB_FILE_EXISTS_PATH source);
 
 		namespace glob
 		{

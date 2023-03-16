@@ -7,6 +7,7 @@
 #define s_cmdList (*((game::native::GfxCmdArray**)(0xCC8F678)))
 #define s_renderCmdBufferSize (*(int*)(0xCC9F49C))
 #define getcvaradr(adr) ((dvar_t*)(*(int*)(adr)))
+#define dvar_cheats getcvaradr(0xCB9F404)
 
 #define R_ADDCMD(m_cmd, m_cmdid) \
 	if ( s_cmdList->usedCritical - s_cmdList->usedTotal + s_renderCmdBufferSize - 0x2000 < sizeof(*m_cmd) ){	s_cmdList->lastCmd = 0; return;  } \
@@ -23,7 +24,6 @@ namespace game
 {
 	namespace native
 	{
-		#define dvar_cheats getcvaradr(0xCB9F404)
 
 		decltype(longjmp)* _longjmp;
 
@@ -60,6 +60,19 @@ namespace game
 			{
 				mov		eax, bLanguageCull;
 				Call	FS_DisplayPath_func;
+			}
+		}
+
+		bool DB_FileExists(const char* file_name, game::native::DB_FILE_EXISTS_PATH source)
+		{
+			const static uint32_t DB_FileExists_func = 0x486F40;
+			__asm
+			{
+				push	source;
+				mov		eax, file_name;
+
+				Call	DB_FileExists_func;
+				add     esp, 4h;
 			}
 		}
 
@@ -441,56 +454,6 @@ namespace game
 			return count;
 		}
 
-		bool sub_503A80(const char* a1, netadr_t* a2)
-		{
-			char	base[1024], *search;
-			char* port = NULL;
-
-			if (!strcmp(a1, "localhost")) {
-				memset(a2, 0, sizeof(*a2));
-				a2->type = NA_LOOPBACK;
-				// as NA_LOOPBACK doesn't require ports report port was given.
-				return true;
-			}
-
-			strncpy(base, a1, sizeof(base) - 1);
-			base[sizeof(base) - 1] = 0;
-
-			if (*base == '[' || Q_CountChar(base, ':') > 1)
-			{
-				// This is an ipv6 address, handle it specially.
-				search = strchr(base, ']');
-				if (search)
-				{
-					*search = '\0';
-					search++;
-
-					if (*search == ':')
-						port = search + 1;
-				}
-
-				if (*base == '[')
-					search = base + 1;
-				else
-					search = base;
-			}
-			else
-			{
-				// look for a port number
-				port = strchr(base, ':');
-
-				if (port) {
-					*port = '\0';
-					port++;
-				}
-
-				search = base;
-			}
-
-			auto lookup = game::native::NET_StringToAdr(a1, a2);
-			return lookup;
-		}
-
 		const char* UI_SafeTranslateString(const char* name)
 		{
 			const static uint32_t oUI_SafeTranslateString = 0x5452F0;
@@ -585,6 +548,20 @@ namespace game
 			out[0] = (in.array[0] - 127.0) * decodeScale;
 			out[1] = (in.array[1] - 127.0) * decodeScale;
 			out[2] = (in.array[2] - 127.0) * decodeScale;
+		}
+
+
+		XAssetHeader db_realloc_xasset_pool(XAssetType type, unsigned int new_size)
+		{
+			const XAssetHeader pool_entry =
+			{
+				utils::memory::get_allocator()->allocate(new_size * DB_GetXAssetSizeHandlers[type]())
+			};
+
+			DB_XAssetPool[type] = pool_entry;
+			g_poolSize[type] = new_size;
+
+			return pool_entry;
 		}
 
 		namespace glob

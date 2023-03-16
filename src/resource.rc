@@ -92,6 +92,8 @@ IMAGE_SPLASH BITMAP "resources/splash.bmp"
 
 MENU_MAIN     RCDATA "resources/main.html"
 
+COMMON_FF   RCDATA "resources/xcommon_yacc_menu.ff"
+
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////

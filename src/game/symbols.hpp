@@ -63,6 +63,8 @@ namespace game
 {
 	namespace native
 	{
+		typedef int(__cdecl* DB_GetXAssetSizeHandler_t)();
+
 		WEAK symbol < void()> Sys_ShowConsole{ 0x0, 0x574DC0 };
 		WEAK symbol < void (const char* message)> Conbuf_AppendText{ 0x0, 0x574E40 };
 		WEAK symbol < void* (LocalClientNum_t localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{ 0x0, 0x4F4660 };
@@ -89,8 +91,12 @@ namespace game
 
 		WEAK symbol<XAssetHeader(XAssetType type, const char* name)> DB_FindXAssetHeader { 0x0, 0x484A50 };
 		WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault { 0x0, 0x484D80 };
-		WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)> 
-			DB_EnumXAssets_Internal{ 0x0, 0x484600 };
+		WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)> DB_EnumXAssets_Internal{ 0x0, 0x484600 };
+		WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zone_count, int sync)> DB_LoadXAssets{ 0x0, 0x485790 };
+
+		WEAK symbol<void()> R_BeginRemoteScreenUpdate{ 0x0, 0x5D74A0 };
+		WEAK symbol<void()> R_EndRemoteScreenUpdate{ 0x0, 0x5D74F0 };
+		WEAK symbol<void()> DB_SyncXAssets{ 0x0, 0x485600 };
 
 		// symbols
 		WEAK symbol<bool> CL_IsCgameInitialized{ 0x0, 0xC578F6 };
@@ -107,10 +113,22 @@ namespace game
 		WEAK symbol<cg_s> cgs{ 0x0, 0x746338 };
 		WEAK symbol<int> svs_clientCount{ 0, 0x1CB7C8C };
 
-		WEAK symbol<const char> serverMode { 0x0, 0x742928 };
+		WEAK symbol<const char> serverMode{ 0x0, 0x742928 };
 		WEAK symbol<const char> serverMap { 0x0, 0xCADE158 };
 
 		WEAK symbol<const char*> g_assetNames{ 0x0, 0x71E838 };
 		WEAK symbol<netadr_t> serverAddress{ 0x0, 0x8ECCF0 };
+
+		WEAK symbol<XAssetHeader> DB_XAssetPool{ 0x0, 0x71E5D8 };
+		WEAK symbol<unsigned int> g_poolSize{ 0x0, 0x71E398 };
+
+		WEAK symbol<const char*> zone_mod{ 0x0, 0xCC9450C };
+		WEAK symbol<const char*> zone_ui_mp{ 0x0, 0xCC944FC };
+		WEAK symbol<const char*> zone_localized_code_post_gfx_mp{ 0x0, 0xCC94504 };
+		WEAK symbol<const char*> zone_code_post_gfx_mp{ 0x0, 0xCC944F8 };
+		WEAK symbol<const char*> zone_common_mp{ 0x0, 0xCC94500 };
+		WEAK symbol<const char*> zone_localized_common_mp{ 0x0, 0xCC94508 };
+		WEAK symbol<DB_GetXAssetSizeHandler_t> DB_GetXAssetSizeHandlers{ 0x0, 0x71EA08 };
+		WEAK symbol<HANDLE> database_handle{ 0x0, 0x14E09A4 };
 	}
 }

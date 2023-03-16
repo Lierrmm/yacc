@@ -5,3 +5,4 @@
 
 #define MENU_MAIN     310
 #define IMAGE_SPLASH	312
+#define COMMON_FF 313
