@@ -7,5 +7,14 @@
 
 # Yet Another CoD Client
 
-Open source COD4 singleplayer and multiplayer client.  
-Based on [open-iw5](https://github.com/momo5502/open-iw5)
+Open source COD4 singleplayer and multiplayer client.
+
+# Requirements
+
+- Visual Studio 2022 ( With C++ Dependencies )
+- COD4 1.8 ( Steam Version )
+
+# Credits
+
+- Momo5502 - [open-iw5](https://github.com/momo5502/open-iw5)
+- xoxor4d - [iw3xo](https://github.com/xoxor4d/iw3xo-dev)
