@@ -3378,6 +3378,13 @@ namespace game
 			GfxWorldDpvsDynamic dpvsDyn;
 		};
 
+		typedef struct MenuList
+		{
+			const char* name;
+			int menuCount;
+			menuDef_t** menus;
+		} MenuList;
+
 		union XAssetHeader
 		{
 			void* data;
@@ -3400,8 +3407,8 @@ namespace game
 			GfxWorld* gfxWorld;
 			GfxLightDef* lightDef;
 			// 			Font_s *font;
-			// 			MenuList *menuList;
-			// 			menuDef_t *menu;
+			MenuList* menuList;
+			menuDef_t *menu;
 			// 			LocalizeEntry *localize;
 			// 			WeaponDef *weapon;
 			// 			SndDriverGlobals *sndDriverGlobals;

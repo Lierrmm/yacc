@@ -40,3 +40,6 @@
 [submodule "deps/dxsdk"]
 	path = deps/dxsdk
 	url = https://github.com/devKlausS/dxsdk.git
+[submodule "deps/stb"]
+	path = deps/stb
+	url = https://github.com/nothings/stb.git

@@ -10,6 +10,7 @@
 #include <utils/string.hpp>
 #include <game/dvars.hpp>
 #include "command.hpp"
+#include <utils/io.hpp>
 
 game::native::dvar_t* g_dump_scripts;
 game::native::dvar_t* g_dump_images;
@@ -173,21 +174,95 @@ void Con_DrawBuildString(float x, float y, float y2)
 //	console::info("Dumped %s\n", out_name);
 //}
 
+game::native::GfxImage* findImage(game::native::Material* material, const std::string& type)
+{
+	game::native::GfxImage* image = nullptr;
+
+	const auto hash = game::native::R_HashString(type.data());
+
+	for (char l = 0; l < material->textureCount; ++l)
+	{
+		if (material->textureTable[l].nameHash == hash)
+		{
+			image = material->textureTable[l].u.image;
+			break;
+		}
+	}
+
+	return image;
+}
+
+game::native::GfxImage* extractImage(game::native::Material* material, const std::string& type)
+{
+	auto* image = findImage(material, type);
+
+	if (!image)
+	{
+		return image;
+	}
+
+	if (image && std::string(image->name).length() > 0)
+	{
+		std::string _name = utils::string::va("raw/imagedump/%s.png", image->name);
+		D3DXSaveTextureToFileA(_name.data(), D3DXIFF_PNG, image->texture.map, nullptr);
+	}
+
+	return image;
+}
+
+void dump_images_from_material(const std::string& matName, game::native::XAssetHeader header)
+{
+	if (!g_dump_images->current.enabled)
+	{
+		return;
+	}
+
+	auto material = header.material;
+
+	extractImage(material, "colorMap");
+	extractImage(material, "normalMap");
+	extractImage(material, "specularMap");
+
+	console::info("Dumped Image %s\n", matName.data());
+}
+
+void dump_raw_image(const std::string& imageName, game::native::XAssetHeader header)
+{
+	if (!g_dump_images->current.enabled)
+	{
+		return;
+	}
+
+	auto image = header.image;
+
+	if (image && std::string(image->name).length() > 0)
+	{
+		std::string _name = utils::string::va("raw/imagedump/%s.png", image->name);
+		D3DXSaveTextureToFileA(_name.data(), D3DXIFF_PNG, image->texture.map, nullptr);
+		console::info("Dumped Raw Image %s\n", imageName.data());
+	}
+}
+
 game::native::XAssetHeader db_find_xasset_header_stub(game::native::XAssetType type, const char* name)
 {
 	auto result = db_find_xasset_header_hook.invoke<game::native::XAssetHeader>(type, name);
 
-	/*if (type == game::native::XAssetType::ASSET_TYPE_MENU)
-	{
-		dump_gsc_script(name, result);
-	}*/
-
 	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
 	{
-		if (!strcmp(name, "loadscreen"))
-		{
-			console::info("Found LOADSCREEN! %s\n", name);
-		}
+		utils::io::create_directory("raw/imagedump");
+		dump_images_from_material(name, result);
+	}
+
+	if (type == game::native::XAssetType::ASSET_TYPE_IMAGE)
+	{
+		utils::io::create_directory("raw/imagedump");
+		dump_raw_image(name, result);
+	}
+
+	if (type == game::native::XAssetType::ASSET_TYPE_MENU)
+	{
+		/*utils::io::create_directory("raw/menudump");
+		dump_menu(name, result);*/
 	}
 
 	if (type == game::native::XAssetType::ASSET_TYPE_RAWFILE)
@@ -335,6 +410,8 @@ public:
 		db_find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 		db_print_default_assets = game::native::Dvar_RegisterBool("db_printDefaultAssets", "Print default asset usage", false, game::native::DVAR_FLAG_SAVED);
+
+		g_dump_images = game::native::Dvar_RegisterBool("g_dump_images", "Dump images to raw/imagedump", false, game::native::DVAR_FLAG_NONE);
 	}
 };
 
