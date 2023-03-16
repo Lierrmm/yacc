@@ -9,6 +9,8 @@
 
 Open source COD4 singleplayer and multiplayer client.
 
+This is experimental and is being used as a learning curve.
+
 # Requirements
 
 - Visual Studio 2022 ( With C++ Dependencies )
