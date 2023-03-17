@@ -18,67 +18,6 @@ game::native::dvar_t* db_print_default_assets;
 
 utils::hook::detour db_find_xasset_header_hook;
 
-void UI_DrawBuildString()
-{
-	int ctx; // client id
-	float size; 
-	game::native::Font_s* font;
-	float fontscale;
-	float ypos;
-	float xpos;
-	const char* buildString;
-
-	if (game::native::ui_context->openMenuCount > 2)
-	{
-		return;
-	}
-	if (game::native::ui_context->openMenuCount == 2 && strcmp(game::native::ui_context->menuStack[1]->window.name, "main_text") != 0)
-	{
-		return;
-	}
-
-	auto buildSize = game::native::Dvar_FindVar("ui_buildSize");
-	auto smallFont = game::native::Dvar_FindVar("ui_smallFont");
-	auto extraBigFont = game::native::Dvar_FindVar("ui_extraBigFont");
-	auto bigFont = game::native::Dvar_FindVar("ui_bigFont");
-	fontscale = buildSize->current.value;
-
-	ctx = 0;
-	size = game::native::scrPlace[ctx].scaleVirtualToReal[1] * fontscale;
-
-	if (smallFont->current.value >= size) {
-		font = game::native::R_RegisterFont(FONT_SMALL, sizeof(FONT_SMALL));
-	}
-	else if (extraBigFont->current.value <= size) {
-		font = game::native::R_RegisterFont(FONT_EXTRA_BIG, sizeof(FONT_EXTRA_BIG));
-	}
-	else if (bigFont->current.value > size) {
-		font = game::native::R_RegisterFont(FONT_NORMAL, sizeof(FONT_NORMAL));
-	}
-	else {
-		font = game::native::R_RegisterFont(FONT_BIG, sizeof(FONT_BIG));
-	}
-
-	auto buildLocation = game::native::Dvar_FindVar("ui_buildLocation");
-
-	ypos = buildLocation->current.vector[1];
-	xpos = 450;
-	ypos -= 5.0;
-
-#ifdef DEBUG
-	xpos -= 20.0;
-	buildString = utils::string::va("%s %s\n", "YACC Debug:", VERSION);
-#else
-	buildString = utils::string::va("%s %s\n", "YACC:", VERSION);
-#endif
-
-	const float color_foreground[4] = { 1.0f, 0.8f, 0.7f, 1.0f };
-	//			client, string, length, font, x, y, horizontal, vertical, scale, color, style
-	UI_DrawText(&game::native::scrPlace[ctx], buildString, 64, font, xpos, ypos, 3, 0, fontscale, color_foreground, 0);
-
-	ypos += game::native::UI_TextHeight(font, fontscale);
-}
-
 /* ---------------------------------------------------------- */
 /* ---------------------- aspect ratio ---------------------- */
 
@@ -134,23 +73,6 @@ __declspec(naked) void aspect_ratio_custom_stub()
 		mov     ecx, 1;				// widescreen true
 		jmp		retn_addr;			// jump back to break op
 	}
-}
-
-void __cdecl SCR_DrawSmallStringExt(signed int x, signed int y, const char* string, const float* setColor)
-{
-	float th;
-
-	auto consoleFont = game::native::R_RegisterFont(FONT_CONSOLE, sizeof(FONT_CONSOLE));
-	th = (float)game::native::R_TextHeight(consoleFont);
-	game::native::R_AddCmdDrawText(string, 0x7FFFFFFF, consoleFont, (float)x, (float)y + th, 1.0, 1.0, 0.0, setColor, 0);
-}
-
-void Con_DrawBuildString(float x, float y, float y2)
-{
-	auto buildString = utils::string::va("%s %s\n", "YACC Debug:", VERSION);
-	float colorYellow[4] = { 1, 1, 0, 1 };
-	float ydraw = y2 - 16.0 + y;
-	SCR_DrawSmallStringExt((signed int)x, (signed int)ydraw, buildString, colorYellow);
 }
 
 //void dump_gsc_script(const std::string& name, game::native::XAssetHeader header)
@@ -287,15 +209,15 @@ class ui final : public module
 public:
 	void post_start() override
 	{
-
+		
 	}
 
 	void post_load() override
 	{
-		utils::hook(0x53DB10, UI_DrawBuildString, HOOK_JUMP).install()->quick();
+		utils::hook::set<const char*>(0x53DBBC, utils::string::va("YACC %s", SHORTVERSION));
+		utils::hook::set<const char*>(0x45C8F1, utils::string::va("YACC %s > ", VERSION));
+		utils::hook::set<DWORD>(0x45DE94, (DWORD)(YACC_BUILDSTRING));
 
-		/* Build Number */
-		utils::hook(0x45DF84, Con_DrawBuildString, HOOK_JUMP).install()->quick();
 
 		// open / re-open the specified menu from uicontext->menus
 		command::add("menu_open", "<menu_name>", "open / re-open the specified menu from uicontext->menus", [](command::params params)

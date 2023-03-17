@@ -99,11 +99,6 @@ __declspec(naked) void console_printfix_stub_04()
 	}
 }
 
-const char* Con_LinePrefix()
-{
-	return ">";
-}
-
 void FS_ReplaceSeparators(char* path) {
 	char* s;
 
@@ -221,13 +216,11 @@ public:
 		utils::hook::nop(0x4DCB06, 2); // model 1
 		utils::hook::set<BYTE>(0x4DCB72, 0xEB); // model 2
 
-		// (c) Snake :: Fix mouse lag by moving SetThreadExecutionState call out of event loop
-		utils::hook::nop(0x57616C, 8);
-		/*scheduler::on_frame([]()
-		{
-			SetThreadExecutionState(ES_DISPLAY_REQUIRED);
-		});*/
+		// Disable PC changed message
+		utils::hook::nop(0x570E85, 2);
 
+		// Disable CD Key Checks
+		utils::hook::set(0x46C830, 0x90C301B0);
 
 		// *
 		// Console prints
@@ -284,8 +277,6 @@ public:
 		});
 
 		utils::hook::set<uint8_t>(0x4643A2, 0xEB);
-
-		utils::hook(0x45C8F5, Con_LinePrefix, HOOK_CALL).install()->quick();
 
 		//utils::hook::nop(0x429719, 1033);
 		//utils::hook(0x429719, CG_InitConsoleCommandsPatched, HOOK_CALL).install()->quick();

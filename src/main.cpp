@@ -77,6 +77,12 @@ FARPROC WINAPI get_proc_address(const HMODULE hModule, const LPCSTR lpProcName)
 	return GetProcAddress(hModule, lpProcName);
 }
 
+bool is_valid_version()
+{
+	auto version = *reinterpret_cast<unsigned int*>(0x45DE76);
+	return version == 13620;
+}
+
 FARPROC load_binary(const launcher::mode mode)
 {
 	loader loader(mode);
@@ -128,13 +134,11 @@ FARPROC load_binary(const launcher::mode mode)
 		throw std::runtime_error("Failed to read game binary! Please select the correct path in the launcher settings.");
 	}
 
-#ifdef INJECT_HOST_AS_LIB
-	return loader.load_library(binary);
-#else
-	return loader.load(self, data);
-#endif
-
-	//return loader.load(self);
+	#ifdef INJECT_HOST_AS_LIB
+		return loader.load_library(binary);
+	#else
+		return loader.load(self, data);
+	#endif
 }
 
 void enable_dpi_awareness()
@@ -195,6 +199,12 @@ int main()
 				throw std::runtime_error("Unable to load binary into memory");
 			}
 
+			if (!is_valid_version())
+			{
+				MessageBoxA(nullptr, "COD4 version not supported\nMake sure you're running the latest Steam version (1.8.13620)", "ERROR", MB_ICONERROR);
+				return 1;
+			}
+		
 			game::initialize(mode);
 			if (!module_loader::post_load()) return 0;
 

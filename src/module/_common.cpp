@@ -427,6 +427,7 @@ public:
 
 	void post_load() override
 	{
+		// courtesy of iw3xo
 		db_realloc_entry_pool();
 
 		game::native::db_realloc_xasset_pool(game::native::XAssetType::ASSET_TYPE_IMAGE, 7168);
@@ -453,8 +454,9 @@ public:
 
 
 		//hide punkbuster error message
-		utils::hook::nop(0x571DCA, 5);
-		utils::hook::nop(0x571DEC, 5);
+		utils::hook::set<BYTE>(0x571DB8, 0xEB);
+		utils::hook::set<BYTE>(0x571DD6, 0xEB);
+		utils::hook::set<BYTE>(0x571DC3, 0xEB);
 
 		utils::hook(0x468F19, R_BeginRegistration_stub, HOOK_JUMP).install()->quick();
 
@@ -469,7 +471,8 @@ public:
 		utils::hook(0x5D4420, load_common_fast_files, HOOK_CALL).install()->quick();
 
 		// ^ Com_StartHunkUsers Mid-hook (realloc files that were unloaded on map load)
-		utils::hook::nop(0x4FABCF, 6);		utils::hook(0x4FABCF, com_start_hunk_users_stub, HOOK_JUMP).install()->quick();
+		utils::hook::nop(0x4FABCF, 6);		
+		utils::hook(0x4FABCF, com_start_hunk_users_stub, HOOK_JUMP).install()->quick();
 
 		// *
 		// IWDs
