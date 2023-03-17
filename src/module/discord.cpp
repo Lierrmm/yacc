@@ -69,6 +69,7 @@ namespace
 			{
 				discord_presence.partyId = utils::string::va("%zu", hash_fn(address) ^ nonce);
 				discord_presence.joinSecret = network::net_adr_to_string(address);
+				discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 			}
 			
 

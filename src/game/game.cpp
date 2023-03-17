@@ -24,6 +24,7 @@ namespace game
 {
 	namespace native
 	{
+		vec4_t colorWhite = { 1, 1, 1, 1 };
 
 		decltype(longjmp)* _longjmp;
 
@@ -209,7 +210,6 @@ namespace game
 			return (int)((float)R_TextWidth(text, maxChars, font) * normscale);
 		}
 
-
 		int UI_TextHeight(Font_s* font, float scale)
 		{
 			float normscale;
@@ -314,7 +314,6 @@ namespace game
 			}
 			return intcolor;
 		}
-
 
 		void Byte4PackVertexColor(const float* from, uint8_t* to)
 		{

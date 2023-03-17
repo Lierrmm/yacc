@@ -57,6 +57,11 @@ namespace utils::string
 		return false;
 	}
 
+	bool starts_with(const std::string& text, const std::string& substring)
+	{
+		return text.find(substring) == 0;
+	}
+
 	void strip(const char* in, char* out, size_t max)
 	{
 		if (!in || !out) return;
@@ -95,6 +100,23 @@ namespace utils::string
 		}
 
 		return result;
+	}
+
+	std::string replace(std::string str, const std::string& from, const std::string& to)
+	{
+		if (from.empty())
+		{
+			return str;
+		}
+
+		size_t start_pos = 0;
+		while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+		{
+			str.replace(start_pos, from.length(), to);
+			start_pos += to.length();
+		}
+
+		return str;
 	}
 
 	std::string dump_hex(const std::string& data, const std::string& separator)

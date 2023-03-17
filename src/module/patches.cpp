@@ -232,10 +232,10 @@ public:
 		utils::hook::nop(0x46B255, 5);
 
 		// Add newlines 
-		utils::hook(0x5D4AF1, console_printfix_stub_01, HOOK_JUMP).install()->quick();
-		utils::hook(0x571D9D, console_printfix_stub_02, HOOK_JUMP).install()->quick();
-		utils::hook(0x52A01E, console_printfix_stub_03, HOOK_JUMP).install()->quick();
-		utils::hook(0x4BA28A, console_printfix_stub_04, HOOK_JUMP).install()->quick();
+		//utils::hook(0x5D4AF1, console_printfix_stub_01, HOOK_JUMP).install()->quick();
+		//utils::hook(0x571D9D, console_printfix_stub_02, HOOK_JUMP).install()->quick();
+		//utils::hook(0x52A01E, console_printfix_stub_03, HOOK_JUMP).install()->quick();
+		//utils::hook(0x4BA28A, console_printfix_stub_04, HOOK_JUMP).install()->quick();
 		utils::hook::nop(0x4BA29B, 5); // gamename
 		utils::hook::nop(0x4BA2AC, 5); // gamedate
 

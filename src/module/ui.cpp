@@ -218,7 +218,6 @@ public:
 		utils::hook::set<const char*>(0x45C8F1, utils::string::va("YACC %s > ", VERSION));
 		utils::hook::set<DWORD>(0x45DE94, (DWORD)(YACC_BUILDSTRING));
 
-
 		// open / re-open the specified menu from uicontext->menus
 		command::add("menu_open", "<menu_name>", "open / re-open the specified menu from uicontext->menus", [](command::params params)
 		{
@@ -334,6 +333,10 @@ public:
 		db_print_default_assets = game::native::Dvar_RegisterBool("db_printDefaultAssets", "Print default asset usage", false, game::native::DVAR_FLAG_SAVED);
 
 		g_dump_images = game::native::Dvar_RegisterBool("g_dump_images", "Dump images to raw/imagedump", false, game::native::DVAR_FLAG_NONE);
+	}
+
+	void post_unpack() override
+	{
 	}
 };
 

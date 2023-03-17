@@ -12,6 +12,7 @@
 #include "loader/binary_loader.hpp"
 #endif
 #include <utils/io.hpp>
+#include <utils/properties.hpp>
 
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
@@ -83,6 +84,28 @@ bool is_valid_version()
 	return version == 13620;
 }
 
+void get_patched_binary(std::string* binary, std::string* data)
+{
+	const auto patched_binary = (utils::properties::get_appdata_path() / "bin" / *binary).generic_string();
+
+	try
+	{
+		if (!utils::io::file_exists(patched_binary) && !utils::io::write_file(patched_binary, *data, false))
+		{
+			throw std::runtime_error("Could not write file");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		throw std::runtime_error(
+			utils::string::va("Could not create patched binary for %s! %s",
+				binary->data(), e.what())
+		);
+	}
+
+	*binary = patched_binary;
+}
+
 FARPROC load_binary(const launcher::mode mode)
 {
 	loader loader(mode);
@@ -131,8 +154,12 @@ FARPROC load_binary(const launcher::mode mode)
 	std::string data;
 	if (!utils::io::read_file(binary, &data))
 	{
-		throw std::runtime_error("Failed to read game binary! Please select the correct path in the launcher settings.");
+		throw std::runtime_error(utils::string::va(
+			"Failed to read game binary (%s)!\nPlease copy the yacc.exe into your Call of Duty: Modern Warfare installation folder and run it from there.",
+			binary.data()));
 	}
+
+	get_patched_binary(&binary, &data);
 
 	#ifdef INJECT_HOST_AS_LIB
 		return loader.load_library(binary);
@@ -153,10 +180,37 @@ void enable_dpi_awareness()
 	}
 }
 
+void limit_parallel_dll_loading()
+{
+	const utils::nt::library self;
+	const auto registry_path = R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\)" + self.
+		get_name();
+
+	HKEY key = nullptr;
+	if (RegCreateKeyA(HKEY_LOCAL_MACHINE, registry_path.data(), &key) == ERROR_SUCCESS)
+	{
+		RegCloseKey(key);
+	}
+
+	key = nullptr;
+	if (RegOpenKeyExA(
+		HKEY_LOCAL_MACHINE, registry_path.data(), 0,
+		KEY_ALL_ACCESS, &key) != ERROR_SUCCESS)
+	{
+		return;
+	}
+
+	DWORD value = 1;
+	RegSetValueExA(key, "MaxLoaderThreads", 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
+
+	RegCloseKey(key);
+}
+
 int main()
 {
 	FARPROC entry_point;
 	enable_dpi_awareness();
+	limit_parallel_dll_loading();
 
 	std::srand(static_cast<std::uint32_t>(time(nullptr)) ^ ~(GetTickCount() * GetCurrentProcessId()));
 

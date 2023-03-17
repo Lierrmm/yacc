@@ -79,8 +79,9 @@ namespace utils::string
 	std::string to_lower(std::string text);
 	std::string to_upper(std::string text);
 	void strip(const char* in, char* out, size_t max);
-
+	bool starts_with(const std::string& text, const std::string& substring);
 	bool match_compare(const std::string& input, const std::string& text, bool exact);
+	std::string replace(std::string str, const std::string& from, const std::string& to);
 
 	std::wstring convert(const std::string& str);
 
