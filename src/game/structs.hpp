@@ -2546,6 +2546,7 @@ namespace game
 			ASSET_TYPE_COUNT = 0x21,
 			ASSET_TYPE_STRING = 0x21,
 			ASSET_TYPE_ASSETLIST = 0x22,
+			ASSET_TYPE_INVALID = -1,
 		};
 
 #pragma pack(push, 16)
@@ -3385,6 +3386,188 @@ namespace game
 			menuDef_t** menus;
 		} MenuList;
 
+		struct LocalizeEntry
+		{
+			const char* value;
+			const char* name;
+		};
+
+		struct StringTableCell
+		{
+			const char* string;
+			int hash;
+		};
+
+		typedef struct
+		{
+			const char* name;
+			int columnCount;
+			int rowCount;
+			StringTableCell* values;
+		}StringTable;
+
+		typedef enum
+		{
+			SASYS_UI = 0x0,
+			SASYS_CGAME = 0x1,
+			SASYS_GAME = 0x2,
+			SASYS_COUNT = 0x3,
+		}snd_alias_system_t;
+
+
+		typedef struct _AILSOUNDINFO
+		{
+			signed int format;
+			const void* data_ptr;
+			unsigned int data_len;
+			unsigned int rate;
+			signed int bits;
+			signed int channels;
+			unsigned int samples;
+			unsigned int block_size;
+			const void* initial_ptr;
+		}AILSOUNDINFO;
+
+		typedef struct MssSound_s
+		{
+			AILSOUNDINFO ailInfo;
+			void* data;
+		}MssSound_t;
+
+		typedef struct LoadedSound_s
+		{
+			const char* name;
+			MssSound_t sounds;
+		}LoadedSound_t;
+
+
+		typedef struct SoundFileInfo_s
+		{
+			const char* sndfilename;
+			MssSound_t ailsoundinfo;
+		}SoundFileInfo_t;
+
+
+		typedef struct StreamFileNamePacked_s
+		{
+			unsigned __int64 offset;
+			unsigned __int64 length;
+		}StreamFileNamePacked_t;
+
+		typedef struct StreamFileNameRaw_s
+		{
+			const char* dir;
+			const char* name;
+		}StreamFileNameRaw_t;
+
+		typedef union StreamFileInfo_s
+		{
+			StreamFileNameRaw_t raw;
+			StreamFileNamePacked_t packed;
+		}StreamFileInfo_t;
+
+		typedef struct StreamFileName_s
+		{
+			StreamFileInfo_t info;
+			unsigned __int16 isLocalized;
+			unsigned __int16 fileIndex;
+		}StreamFileName_t;
+
+		typedef struct StreamedSound_s
+		{
+			StreamFileName_t filename;
+			unsigned int totalMsec;
+		}StreamedSound_t;
+
+
+
+		typedef union SoundFileRef_s
+		{
+			LoadedSound_t* loadSnd;
+			StreamedSound_t streamSnd;
+		}SoundFileRef_t;
+
+
+		typedef struct SoundFile_s
+		{
+			byte type;
+			byte pad2[3];
+			SoundFileRef_t sound;
+			byte exists;
+			byte pad[3];
+		}SoundFile_t;
+
+		typedef struct SndCurve_s
+		{
+			const char* filename;
+			int knotCount;
+			float knots[8][2];
+		}SndCurve_t;
+
+		typedef enum
+		{
+			SAT_UNKNOWN = 0x0,
+			SAT_LOADED = 0x1,
+			SAT_STREAMED = 0x2,
+			SAT_PRIMED = 0x3,
+			SAT_COUNT = 0x4,
+		}snd_alias_type_t;
+
+		typedef struct SpeakerLevels_s
+		{
+			int speaker;
+			int numLevels;
+			float levels[2];
+		}SpeakerLevels_t;
+
+		typedef struct ChannelMap_s
+		{
+			int entryCount;	// how many entries are used
+			SpeakerLevels_t speakers[6];
+		}ChannelMap_t;
+
+		typedef struct SpeakerMap_s
+		{
+			byte isDefault;
+			byte pad[3];
+			const char* name;
+			ChannelMap_t channelMaps[2][2];
+		}SpeakerMap_t;
+
+		typedef const struct snd_alias_s
+		{
+			const char* aliasName;
+			const char* subtitle;
+			const char* secondaryAliasName;
+			const char* chainAliasName;
+			SoundFile_t* soundFile;
+			int sequence;
+			float volMin;
+			float volMax;
+			float pitchMin;
+			float pitchMax;
+			float distMin;
+			float distMax;
+			int flags;
+			float slavePercentage;
+			float probability;
+			float lfePercentage;
+			float centerPercentage;
+			int startDelay;
+			SndCurve_t* volumeFalloffCurve;
+			float envelopMin;
+			float envelopMax;
+			float envelopPercentage;
+			SpeakerMap_t* speakerMap;
+		}snd_alias_t;
+
+		typedef struct snd_alias_list_s
+		{
+			const char* aliasName;
+			snd_alias_t* head; //Can be multiple
+			int count;
+		}snd_alias_list_t;
+
 		union XAssetHeader
 		{
 			void* data;
@@ -3397,7 +3580,7 @@ namespace game
 			// 			MaterialVertexShader *vertexShader;
 			MaterialTechniqueSet* techniqueSet;
 			GfxImage* image;
-			// 			snd_alias_list_t *sound;
+			snd_alias_list_t *sound;
 			// 			SndCurve *sndCurve;
 			clipMap_t* clipMap;
 			ComWorld* comWorld;
@@ -3406,16 +3589,16 @@ namespace game
 			MapEnts* mapEnts;
 			GfxWorld* gfxWorld;
 			GfxLightDef* lightDef;
-			// 			Font_s *font;
+			Font_s *font;
 			MenuList* menuList;
 			menuDef_t *menu;
-			// 			LocalizeEntry *localize;
+			LocalizeEntry *localize;
 			// 			WeaponDef *weapon;
 			// 			SndDriverGlobals *sndDriverGlobals;
 			/*FxEffectDef**/void* fx;
 			// 			FxImpactTable *impactFx;
 			RawFile* rawfile;
-			// 			StringTable *stringTable;
+			StringTable *stringTable;
 		};
 
 		struct XAsset
@@ -3427,8 +3610,8 @@ namespace game
 		struct XAssetEntry
 		{
 			XAsset asset;
-			char zoneIndex;
-			char inuse;
+			byte zoneIndex;
+			bool inuse;
 			unsigned __int16 nextHash;
 			unsigned __int16 nextOverride;
 			unsigned __int16 usageFrame;
@@ -3617,5 +3800,116 @@ namespace game
 			THREAD_CONTEXT_MJPEG,
 			THREAD_CONTEXT_COUNT,
 		};
+
+		union XAssetEntryPoolEntry
+		{
+			XAssetEntry entry;
+			union XAssetEntryPoolEntry* next;
+		};
+
+		struct XBlock
+		{
+			char* data;
+			unsigned int size;
+		};
+
+		struct DB_LoadData
+		{
+			void* f;
+			const char* filename;
+			XBlock* blocks;
+			int outstandingReads;
+			struct _OVERLAPPED overlapped;
+			int stream[13];
+			char* compressBufferStart;
+			char* compressBufferEnd;
+			void(__cdecl* interrupt_)();
+			int allocType;
+		};
+
+		//* Custom
+		enum itemTextStyle
+		{
+			ITEM_TEXTSTYLE_NORMAL = 0,   // normal text
+			ITEM_TEXTSTYLE_SHADOWED = 3,   // drop shadow ( need a color for this )
+			ITEM_TEXTSTYLE_SHADOWEDMORE = 6,   // drop shadow ( need a color for this )
+			ITEM_TEXTSTYLE_BORDERED = 7,   // border (stroke)
+			ITEM_TEXTSTYLE_BORDEREDMORE = 8,   // more border :P
+			ITEM_TEXTSTYLE_MONOSPACE = 128,
+			ITEM_TEXTSTYLE_MONOSPACESHADOWED = 132,
+		};
+
+		enum XFILE_BLOCK_TYPES
+		{
+			XFILE_BLOCK_TEMP = 0x0,
+			XFILE_BLOCK_PHYSICAL = 0x1,
+			XFILE_BLOCK_RUNTIME = 0x2,
+			XFILE_BLOCK_VIRTUAL = 0x3,
+			XFILE_BLOCK_LARGE = 0x4,
+
+			// Those are probably incorrect
+			XFILE_BLOCK_CALLBACK,
+			XFILE_BLOCK_VERTEX,
+			XFILE_BLOCK_INDEX,
+
+			MAX_XFILE_COUNT,
+
+			XFILE_BLOCK_INVALID = -1
+		};
+
+		struct XFile
+		{
+			unsigned int size;
+			unsigned int externalSize;
+			unsigned int blockSize[MAX_XFILE_COUNT];
+		};
+
+		#define FS_GENERAL_REF	0x01
+		#define FS_UI_REF		0x02
+		#define FS_CGAME_REF	0x04
+		#define FS_QAGAME_REF	0x08
+
+		#define MAX_ZPATH	256
+		#define	MAX_SEARCH_PATHS	4096
+		#define MAX_FILEHASH_SIZE	1024
+		#define MAX_FILE_HANDLES 64
+
+
+		typedef struct fileInPack_s {
+			unsigned long		pos;		// file info position in zip
+			char* name;		// name of the file
+			struct	fileInPack_s* next;		// next file in the hash
+		} fileInPack_t;
+
+		typedef struct {	//Verified
+			char		pakFilename[256];	// c:\quake3\baseq3\pak0.pk3
+			char		pakBasename[256];	// pak0
+			char		pakGamename[256];	// baseq3
+			void*		handle;						// handle to zip file +0x300
+			int			checksum;					// regular checksum
+			int			pure_checksum;				// checksum for pure
+			int			hasOpenFile;
+			int			numfiles;					// number of files in pk3
+			int			referenced;					// referenced file flags
+			int			hashSize;					// hash table size (power of 2)		+0x318
+			fileInPack_t** hashTable;					// hash table	+0x31c
+			fileInPack_t* buildBuffer;				// buffer with the filenames etc. +0x320
+		} pack_t;
+
+		typedef struct {	//Verified
+			char		path[256];		// c:\quake3
+			char		gamedir[256];	// baseq3
+		} directory_t;
+
+
+		typedef struct searchpath_s {	//Verified
+			struct searchpath_s* next;
+			pack_t* pack;		// only one of pack / dir will be non NULL
+			directory_t* dir;
+			bool	localized;
+			int		val_2;
+			int		val_3;
+			int		langIndex;
+		} searchpath_t;
 	}
 }

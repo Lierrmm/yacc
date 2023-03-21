@@ -422,7 +422,7 @@ class common final : public module
 public:
 	void post_start() override
 	{
-		//copy_custom_fastfile();
+		copy_custom_fastfile();
 	}
 
 	void post_load() override

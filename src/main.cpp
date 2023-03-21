@@ -272,8 +272,14 @@ int main()
 		}
 	}
 
-	//MessageBoxA(nullptr, utils::string::va("Entry Point: %p", entry_point), "ENTRYPOINT", MB_ICONINFORMATION);
-	return entry_point();
+	try 
+	{
+		return entry_point();
+	}
+	catch (std::exception ex)
+	{
+		MessageBoxA(nullptr, ex.what(), "ENTRYPOINT ERROR", MB_ICONINFORMATION);
+	}
 }
 
 

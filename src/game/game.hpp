@@ -10,7 +10,9 @@
 // *
 // Common
 #define FF_LOAD_ADDON_MENU		false
-#define FF_ADDON_MENU_NAME		"xcommon_yacc_menu"
+#define FF_ADDON_MENU_NAME		"xcommon_yacc"
+
+#define NUM_CUSTOM_CLASSES 15
 
 namespace game
 {
@@ -70,6 +72,10 @@ namespace game
 		extern int UI_TextHeight(Font_s* font, float scale);
 		extern int UI_TextWidth(const char* text, int maxChars, Font_s* font, float scale);
 		extern int R_TextHeight(Font_s* font);
+		extern int R_TextWidth(const char* text /*<eax*/, int maxChars, Font_s* font);
+		extern void _R_AddCmdDrawText(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation, const float* color, int style);
+
+		extern void CL_DrawStretchPicPhysical(float x, float y, float w, float h, float s0, float t0, float s1, float t1, float* color, game::native::Material* material);
 
 		extern int String_Parse(const char** p /*eax*/, char* out_str, int len);
 		extern void Menus_OpenByName(const char* menu_name, game::native::UiContext* ui_dc);
@@ -94,6 +100,13 @@ namespace game
 		extern XAssetHeader db_realloc_xasset_pool(XAssetType type, unsigned int new_size);
 
 		extern bool DB_FileExists(const char* file_name, game::native::DB_FILE_EXISTS_PATH source);
+
+		extern const char* DB_GetXAssetTypeName(XAssetType type);
+		extern XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name);
+
+		extern void FS_FreeFile(void* buf);
+		extern int FS_ReadFile(const char* path, char** buffer);
+		extern int StringTable_HashString(const char* string);
 
 		namespace glob
 		{

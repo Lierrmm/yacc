@@ -328,7 +328,7 @@ public:
 			/* default	*/ false,
 			/* flags	*/ game::native::dvar_flags::read_only);
 
-		db_find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, db_find_xasset_header_stub);
+		//db_find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 		db_print_default_assets = game::native::Dvar_RegisterBool("db_printDefaultAssets", "Print default asset usage", false, game::native::DVAR_FLAG_SAVED);
 

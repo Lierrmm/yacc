@@ -83,16 +83,17 @@ END
 // Binary Data
 //
 
-102       ICON   "resources/icon.ico"
+102         ICON   "resources/icon.ico"
 
-BINARY_SP RCDATA "resources/iw3sp.exe.diff"
-BINARY_MP RCDATA "resources/iw3mp.exe.diff"
+BINARY_SP   RCDATA "resources/iw3sp.exe.diff"
+BINARY_MP   RCDATA "resources/iw3mp.exe.diff"
 
-IMAGE_SPLASH BITMAP "resources/splash.bmp"
+IMAGE_SPLASH IMAGE "resources/splash.bmp"
+IMAGE_LOGO   IMAGE "resources/logo.bmp"
 
-MENU_MAIN     RCDATA "resources/main.html"
+MENU_MAIN   RCDATA "resources/main.html"
 
-COMMON_FF   RCDATA "resources/xcommon_yacc_menu.ff"
+COMMON_FF   RCDATA "resources/xcommon_yacc.ff"
 
 
 #endif    // English (United States) resources

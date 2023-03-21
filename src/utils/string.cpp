@@ -89,6 +89,19 @@ namespace utils::string
 		*out = '\0';
 	}
 
+	std::string convert(const std::wstring& wstr)
+	{
+		std::string result;
+		result.reserve(wstr.size());
+
+		for (const auto& chr : wstr)
+		{
+			result.push_back(static_cast<char>(chr));
+		}
+
+		return result;
+	}
+
 	std::wstring convert(const std::string& str)
 	{
 		std::wstring result;
@@ -158,5 +171,15 @@ namespace utils::string
 			return data;
 		}
 		return {};
+	}
+
+	std::string XOR(std::string str, char value)
+	{
+		for (unsigned int i = 0; i < str.size(); ++i)
+		{
+			str[i] ^= value;
+		}
+
+		return str;
 	}
 }

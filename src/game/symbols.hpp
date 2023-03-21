@@ -59,11 +59,14 @@
 #define VERTICAL_APPLY_TO640				5
 #define VERTICAL_APPLY_CENTER_SAFEAREA		6
 
+#define fs_loadStack *(int*)(0xCB12ABC)
+
 namespace game
 {
 	namespace native
 	{
 		typedef int(__cdecl* DB_GetXAssetSizeHandler_t)();
+		typedef const char* (*DB_GetXAssetNameHandler_t)(XAssetHeader* asset);
 
 		WEAK symbol < void()> Sys_ShowConsole{ 0x0, 0x574DC0 };
 		WEAK symbol < void (const char* message)> Conbuf_AppendText{ 0x0, 0x574E40 };
@@ -83,8 +86,8 @@ namespace game
 		WEAK symbol <void()> Key_SetCatcher{ 0x0, 0x464A80 };
 		WEAK symbol <const char*()> Sys_DefaultInstallPath{ 0x0, 0x56D480 };
 		WEAK symbol <void(const char* map)> LoadMapLoadScreenInternal{ 0x0, 0x466C00 };
-		WEAK symbol<void(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{ 0x0, 0x567830 };
-		WEAK symbol<bool(const char* address, netadr_t* adr)> NET_StringToAdr{ 0, 0x503A80 };
+		WEAK symbol <void(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{ 0x0, 0x567830 };
+		WEAK symbol <bool(const char* address, netadr_t* adr)> NET_StringToAdr{ 0, 0x503A80 };
 
 		WEAK symbol<const char* (const char* mode)> GetModeName { 0x0, 0x53E3E0 };
 		WEAK symbol<const char* (const char* map)> GetMapName { 0x0, 0x53E310 };
@@ -93,10 +96,18 @@ namespace game
 		WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault { 0x0, 0x484D80 };
 		WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)> DB_EnumXAssets_Internal{ 0x0, 0x484600 };
 		WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zone_count, int sync)> DB_LoadXAssets{ 0x0, 0x485790 };
+		WEAK symbol<void(int level, const char* error, ...)> Com_Error { 0x0, 0x4F7ED0 };
+		WEAK symbol<int(const char* a1, int* a2, int a3)> FS_FOpenFileRead{ 0x0, 0x556020 };
+		WEAK symbol<int(char* Buffer, int ElementCount, int a3)> FS_Read{ 0x0, 0x5567E0 };
+		WEAK symbol<LPCSTR(LPCSTR psFileName, bool forceEnglish)> SE_Load{ 0x0, 0x534AF0 };
+		WEAK symbol<LPCSTR(bool forceEnglish)> SE_LoadLanguage{ 0x0, 0x534D70 };
 
 		WEAK symbol<void()> R_BeginRemoteScreenUpdate{ 0x0, 0x5D74A0 };
 		WEAK symbol<void()> R_EndRemoteScreenUpdate{ 0x0, 0x5D74F0 };
 		WEAK symbol<void()> DB_SyncXAssets{ 0x0, 0x485600 };
+
+		WEAK symbol<int()> Sys_Milliseconds { 0x0, 0x573650 };
+		WEAK symbol<DWORD()> Sys_SuspendOtherThreads{ 0x0, 0x506150 };
 
 		// symbols
 		WEAK symbol<bool> CL_IsCgameInitialized{ 0x0, 0xC578F6 };
@@ -129,6 +140,8 @@ namespace game
 		WEAK symbol<const char*> zone_common_mp{ 0x0, 0xCC94500 };
 		WEAK symbol<const char*> zone_localized_common_mp{ 0x0, 0xCC94508 };
 		WEAK symbol<DB_GetXAssetSizeHandler_t> DB_GetXAssetSizeHandlers{ 0x0, 0x71EA08 };
+		WEAK symbol<DB_GetXAssetNameHandler_t> DB_GetXAssetNameHandlers{ 0x0, 0x71E8C8 };
 		WEAK symbol<HANDLE> database_handle{ 0x0, 0x14E09A4 };
+		WEAK symbol<DB_LoadData> g_load{ 0x0, 0xE2C4C8 };
 	}
 }

@@ -6,6 +6,7 @@ enum class module_priority
 	// must run after the updater
 	steam_proxy,
 	updater,
+	patches,
 	// must have the highest priority
 	filesystem,
 };

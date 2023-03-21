@@ -84,8 +84,92 @@ namespace utils::string
 	std::string replace(std::string str, const std::string& from, const std::string& to);
 
 	std::wstring convert(const std::string& str);
+	std::string convert(const std::wstring& wstr);
 
 	std::string dump_hex(const std::string& data, const std::string& separator = " ");
 
 	std::string get_clipboard_data();
+	std::string XOR(std::string str, char value);
+
+	template <typename T> inline void Merge(std::vector<T>* target, T* source, size_t length)
+	{
+		if (source)
+		{
+			for (size_t i = 0; i < length; ++i)
+			{
+				target->push_back(source[i]);
+			}
+		}
+	}
+
+	template <typename T> inline void Merge(std::vector<T>* target, std::vector<T> source)
+	{
+		for (auto& entry : source)
+		{
+			target->push_back(entry);
+		}
+	}
+
+	template <typename T>
+	class Signal
+	{
+	public:
+		Signal()
+		{
+			std::lock_guard<std::recursive_mutex> _(this->mutex);
+
+			this->slots.clear();
+		}
+
+		Signal(Signal& obj) : Signal()
+		{
+			std::lock_guard<std::recursive_mutex> _(this->mutex);
+			std::lock_guard<std::recursive_mutex> __(obj.mutex);
+
+			utils::string::Merge(&this->slots, obj.getSlots());
+		}
+
+		void connect(Slot<T> slot)
+		{
+			std::lock_guard<std::recursive_mutex> _(this->mutex);
+
+			if (slot)
+			{
+				this->slots.push_back(slot);
+			}
+		}
+
+		void clear()
+		{
+			std::lock_guard<std::recursive_mutex> _(this->mutex);
+
+			this->slots.clear();
+		}
+
+		std::vector<Slot<T>>& getSlots()
+		{
+			return this->slots;
+		}
+
+		template <class ...Args>
+		void operator()(Args&&... args) const
+		{
+			std::lock_guard<std::recursive_mutex> _(this->mutex);
+
+			std::vector<Slot<T>> copiedSlots;
+			utils::string::Merge(&copiedSlots, this->slots);
+
+			for (auto& slot : copiedSlots)
+			{
+				if (slot)
+				{
+					slot(std::forward<Args>(args)...);
+				}
+			}
+		}
+
+	private:
+		mutable std::recursive_mutex mutex;
+		std::vector<Slot<T>> slots;
+	};
 }

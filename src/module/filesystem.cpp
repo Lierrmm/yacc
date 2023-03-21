@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/module_loader.hpp"
-
 #include <game/game.hpp>
 
 #include "command.hpp"
@@ -210,14 +209,21 @@ namespace filesystem
 	class component final : public module
 	{
 	public:
-		void post_unpack() override
+		void post_load() override
 		{
+			// fs_basegame
+			utils::hook::set<const char*>(SELECT_VALUE(0x0, 0x558B78), "yacc");
+			//utils::hook::set(0x6EDAF4, "yacc/images/splash.bmp"); ignore for now
+			utils::hook::set(0x574C7A, "yacc/images/logo.bmp");
+			
 			fs_startup_hook.create(SELECT_VALUE(0x0, 0x558D30), fs_startup_stub);
 
 			utils::hook(SELECT_VALUE(0x0, 0x56D480), sys_default_install_path_stub, HOOK_JUMP).install()->quick();
+		}
 
-			//// fs_game flags
-			//utils::hook::set<uint32_t>(SELECT_VALUE(0x0, 0x558B78), 0);
+		module_priority priority() const override
+		{
+			return module_priority::filesystem;
 		}
 	};
 }

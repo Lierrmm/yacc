@@ -391,6 +391,51 @@ namespace game
 			R_AddCmdDrawTextWithCursor(text, maxChars, font, x, y, xScale, yScale, rotation, color, style, -1, 0);
 		}
 
+		void R_AddCmdDrawStretchPic(game::native::Material* material, float x, float y, float w, float h, float s0, float t0, float s1, float t1, float* color)
+		{
+			const static uint32_t R_AddCmdDrawStretchPic_func = 0x5D61F0;
+			__asm
+			{
+				pushad;
+				push	color;
+				mov		eax, [material];
+				sub		esp, 20h;
+
+				fld		t1;
+				fstp[esp + 1Ch];
+
+				fld		s1;
+				fstp[esp + 18h];
+
+				fld		t0;
+				fstp[esp + 14h];
+
+				fld		s0;
+				fstp[esp + 10h];
+
+				fld		h;
+				fstp[esp + 0Ch];
+
+				fld		w;
+				fstp[esp + 8h];
+
+				fld		y;
+				fstp[esp + 4h];
+
+				fld		x;
+				fstp[esp];
+
+				call	R_AddCmdDrawStretchPic_func;
+				add		esp, 24h;
+				popad;
+			}
+		}
+
+		void CL_DrawStretchPicPhysical(float x, float y, float w, float h, float s0, float t0, float s1, float t1, float* color, game::native::Material* material)
+		{
+			R_AddCmdDrawStretchPic(material, x, y, w, h, s0, t0, s1, t1, color);
+		}
+
 		void UI_DrawText(const ScreenPlacement* scrPlace, const char* text, int maxChars, Font_s* font, float ix, float iy, int horzAlign, int vertAlign, float scale, const float* color, int style)
 		{
 			long double nScale;
@@ -549,7 +594,6 @@ namespace game
 			out[2] = (in.array[2] - 127.0) * decodeScale;
 		}
 
-
 		XAssetHeader db_realloc_xasset_pool(XAssetType type, unsigned int new_size)
 		{
 			const XAssetHeader pool_entry =
@@ -561,6 +605,126 @@ namespace game
 			g_poolSize[type] = new_size;
 
 			return pool_entry;
+		}
+
+		const char* DB_GetXAssetTypeName(XAssetType type)
+		{
+			return g_assetNames[type];
+		}
+
+		XAssetEntry* db_find_x_asset_entry(XAssetType type_, const char* name)
+		{
+			static DWORD func = SELECT_VALUE(0x0, 0x484780);
+			XAssetEntry* result{};
+
+			__asm
+			{
+				pushad
+				push name
+				mov edi, type_
+				call func
+				add esp, 0x4
+				mov result, eax
+				popad
+			}
+
+			return result;
+		}
+
+		XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name)
+		{
+			return db_find_x_asset_entry(type, name);
+		}
+
+		void FS_FreeFile(void* buf)
+		{
+			if (!buf)
+			{
+				Com_Error(1, "FS_FreeFile( NULL )");
+			}
+
+			--fs_loadStack;
+			free(buf);
+		}
+
+		void FS_LoadStackInc()
+		{
+			++fs_loadStack;
+		}
+
+		void _FS_FCloseFile(int fileHandle)
+		{
+			const static uint32_t FS_CloseFile_Func = 0x555A70;
+			__asm
+			{
+				mov		eax, fileHandle;
+				call FS_CloseFile_Func;
+			}
+		}
+
+		int FS_ReadFile(const char* qpath, char** buffer) {
+			int	h;
+			byte* buf;
+			int	len;
+
+
+
+			if (!qpath || !qpath[0]) {
+				Com_Error(1, "FS_ReadFile with empty name\n");
+			}
+
+			buf = NULL;	// quiet compiler warning
+
+			// look for it in the filesystem or pack files
+			len = game::native::FS_FOpenFileRead(qpath, &h, 0);
+			if (h == 0) {
+				if (buffer) {
+					*buffer = NULL;
+				}
+				return -1;
+			}
+
+			if (!buffer) {
+				_FS_FCloseFile(h);
+				return len;
+			}
+
+			FS_LoadStackInc();
+
+			buf = (byte*)malloc((size_t)len + 1);
+			*buffer = (char*)buf;
+
+			game::native::FS_Read((char*)buf, len, h);
+
+			// guarantee that it will have a trailing 0 for string operations
+			buf[len] = 0;
+			_FS_FCloseFile(h);
+			return len;
+		}
+
+
+		// Not in COD4 but we need some form of value
+		int StringTable_HashString(const char* string)
+		{
+			const char* v1 = string;
+
+			if (!string)
+				return 0;
+
+			char v3 = *string;
+			int v4 = 5381;
+
+			if (*string)
+			{
+				do
+				{
+					++v1;
+					v4 = 33 * v4 + tolower(v3);
+					v3 = *v1;
+				} while (*v1);
+			}
+
+			return v4;
 		}
 
 		namespace glob

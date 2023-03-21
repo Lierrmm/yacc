@@ -10,13 +10,11 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include "command.hpp"
+#include <utils/io.hpp>
 
 // on renderer initialization
 void print_loaded_modules()
 {
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
-
-
 	game::native::Com_PrintMessage(0, utils::string::va("-------------- Loaded Modules -------------- \n%s\n", game::native::glob::loaded_modules.c_str()), 0);
 
 	// add FS Path output print
@@ -175,13 +173,55 @@ __declspec(naked) void LoadMapLoadscreen(const char* name)
 	}
 }
 
+void copy_startup_files()
+{
+	const auto splashResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_SPLASH), "Image");
+	if (!splashResource)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to find custom splashscreen!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	const auto splashHandle = LoadResource(nullptr, splashResource);
+	if (!splashHandle)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to load custom splashscreen!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	utils::io::write_file("yacc/images/splash.bmp", std::string(LPSTR(LockResource(splashHandle)), SizeofResource(nullptr, splashResource)));
+
+	const auto logoResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_LOGO), "Image");
+	if (!logoResource)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to find custom logo!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	const auto logoHandle = LoadResource(nullptr, logoResource);
+	if (!logoHandle)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to load custom logo!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	utils::io::write_file("yacc/images/logo.bmp", std::string(LPSTR(LockResource(logoHandle)), SizeofResource(nullptr, logoResource)));
+}
 
 class patches final : public module
 {
 public:
 	void post_start() override
 	{
-
+		copy_startup_files();
 	}
 
 	void post_load() override
@@ -284,6 +324,11 @@ public:
 
 		// remove MAX_PACKET_CMDs com_error
 		utils::hook::nop(0x4603D3, 5);
+	}
+
+	module_priority priority() const override
+	{
+		return module_priority::patches;
 	}
 };
 
