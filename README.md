@@ -21,4 +21,5 @@ This is experimental and is being used as a learning curve.
 # Credits
 
 - Momo5502 - [open-iw5](https://github.com/momo5502/open-iw5)
+- xlabs - [iw4x](https://github.com/XLabsProject/iw4x-client)
 - xoxor4d - [iw3xo](https://github.com/xoxor4d/iw3xo-dev)
