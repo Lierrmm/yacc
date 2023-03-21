@@ -213,8 +213,9 @@ int main()
 	limit_parallel_dll_loading();
 
 	std::srand(static_cast<std::uint32_t>(time(nullptr)) ^ ~(GetTickCount() * GetCurrentProcessId()));
-
 	{
+		module_loader::sort();
+
 		auto premature_shutdown = true;
 		const auto _ = gsl::finally([&premature_shutdown]()
 		{

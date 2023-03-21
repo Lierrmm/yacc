@@ -27,7 +27,7 @@ public:
 	template <typename T>
 	static T* get()
 	{
-		for (const auto& module_ : *modules_)
+		for (const auto& module_ : get_components())
 		{
 			if (typeid(*module_.get()) == typeid(T))
 			{
@@ -44,15 +44,14 @@ public:
 	static bool post_load();
 	static void post_unpack();
 	static void pre_destroy();
-
+	static void sort();
 	static void* load_import(const std::string& module, const std::string& function);
 
 	static void trigger_premature_shutdown();
 
 private:
-	static std::vector<std::unique_ptr<module>>* modules_;
-
-	static void destroy_modules();
+	//static std::vector<std::unique_ptr<module>>* modules_;
+	static std::vector<std::unique_ptr<module>>& get_components();
 };
 
 #define REGISTER_MODULE(name)                       \

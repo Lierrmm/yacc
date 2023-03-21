@@ -1,5 +1,15 @@
 #pragma once
 
+enum class module_priority
+{
+	min = 0,
+	// must run after the updater
+	steam_proxy,
+	updater,
+	// must have the highest priority
+	filesystem,
+};
+
 class module
 {
 public:
@@ -21,6 +31,11 @@ public:
 
 	virtual void pre_destroy()
 	{
+	}
+
+	virtual module_priority priority() const
+	{
+		return module_priority::min;
 	}
 
 	virtual void* load_import(const std::string& module, const std::string& function)
