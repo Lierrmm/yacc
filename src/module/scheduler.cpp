@@ -93,24 +93,6 @@ void scheduler::execute(const pipeline type)
 	pipelines[type].execute();
 }
 
-//void scheduler::r_end_frame_stub()
-//{
-//	utils::hook::invoke<void>(SELECT_VALUE(0x4193D0, 0x67F840));
-//	execute(pipeline::renderer);
-//}
-//
-//void scheduler::g_glass_update_stub()
-//{
-//	utils::hook::invoke<void>(SELECT_VALUE(0x4E3730, 0x505BB0));
-//	execute(pipeline::server);
-//}
-//
-//void scheduler::main_frame_stub()
-//{
-//	utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x4FA8F0));
-//	execute(pipeline::main);
-//}
-
 __declspec(naked) void scheduler::main_frame_stub()
 	{
 		static const int execution_thread = pipeline::main;
