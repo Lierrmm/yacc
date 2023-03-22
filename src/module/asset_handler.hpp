@@ -41,7 +41,6 @@ private:
 	static game::native::XAssetHeader FindTemporaryAsset(game::native::XAssetType type, const char* filename);
 	static bool IsAssetEligible(game::native::XAssetType type, game::native::XAssetHeader asset);
 	static void DB_AddXAsset(game::native::XAssetHeader asset);
-	static void FindAssetStub();
 
 	static void StoreEmptyAsset(game::native::XAssetType type, const char* name);
 	static void StoreEmptyAssetStub();

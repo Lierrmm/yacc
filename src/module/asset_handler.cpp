@@ -98,12 +98,6 @@ bool AssetHandler::IsAssetEligible(game::native::XAssetType type, game::native::
 	bool restrict = false;
 	AssetHandler::RestrictSignal(type, asset, name, &restrict);
 
-	//if (!restrict)
-	//{
-	//	AssetHandler::ModifyAsset(type, *asset, name);
-	//}
-
-	// If no slot restricts the loading, we can load the asset
 	return (!restrict);
 }
 
@@ -119,6 +113,8 @@ game::native::XAssetHeader AssetHandler::AddAsset(game::native::XAssetType type,
 void AssetHandler::DB_AddXAsset(game::native::XAssetHeader asset)
 {
 	uint32_t result{};
+	// move eax register into result
+	// eax contains the asset type
 	__asm
 	{
 		mov result, eax
@@ -162,98 +158,7 @@ void AssetHandler::ResetBypassState()
 {
 	if (AssetHandler::HasThreadBypass())
 	{
-		// Maybe just decrement it?
 		AssetHandler::BypassState = 0;
-	}
-}
-
-__declspec(naked) void AssetHandler::FindAssetStub()
-{
-	__asm
-	{
-		push ebp
-		push ecx
-		push ebx
-		push esi
-		push edi
-
-		push eax
-		pushad
-
-		// Check if custom handler should be bypassed
-		call AssetHandler::HasThreadBypass
-
-		mov[esp + 20h], eax
-		popad
-		pop eax
-
-		test al, al
-		jnz checkTempAssets
-
-		mov ecx, [esp + 18h] // Asset type
-		mov ebx, [esp + 1Ch] // Filename
-
-		push eax
-		pushad
-
-		push ebx
-		push ecx
-
-		call AssetHandler::FindAsset
-
-		add esp, 8h
-
-		mov[esp + 20h], eax
-		popad
-		pop eax
-
-		test eax, eax
-		jnz finishFound
-
-		checkTempAssets :
-		mov al, AssetHandler::ShouldSearchTempAssets // check to see if enabled
-			test eax, eax
-			jz finishOriginal
-
-			mov ecx, [esp + 18h] // Asset type
-			mov ebx, [esp + 1Ch] // Filename
-
-			push ebx
-			push ecx
-
-			call AssetHandler::FindTemporaryAsset
-
-			add esp, 8h
-
-			test eax, eax
-			jnz finishFound
-
-			finishOriginal :
-		// Asset not found using custom handlers or in temp assets or bypasses were enabled
-		// redirect to DB_FindXAssetHeader
-			//mov ebx, ds : 6D7190h // InterlockedDecrement
-			pop edi
-			pop esi
-			pop ebx
-			pop ebp
-
-			push    ebp
-			mov     ebp, esp
-			and esp, 0FFFFFFF8h
-			push    ecx
-			push    ebx
-			push    esi
-			xor ebx, ebx
-			push    edi
-			mov eax, 484A5Ch
-			jmp eax
-
-			finishFound :
-		pop edi
-			pop esi
-			pop ebx
-			pop ebp
-			retn
 	}
 }
 
@@ -280,8 +185,6 @@ void AssetHandler::Relocate(void* start, void* to, DWORD size)
 	}
 }
 
-
-
 game::native::XAssetHeader AssetHandler::FindOriginalAsset(game::native::XAssetType type, const char* filename)
 {
 	AssetHandler::SetBypassState(true);
@@ -296,27 +199,6 @@ void AssetHandler::StoreEmptyAsset(game::native::XAssetType type, const char* na
 	AssetHandler::EmptyAssets.push_back({ type, name });
 }
 
-
-//TODO fix for COD4
-__declspec(naked) void AssetHandler::StoreEmptyAssetStub()
-{
-	__asm
-	{
-		pushad
-		push ebx
-		push eax
-
-		call AssetHandler::StoreEmptyAsset
-
-		pop eax
-		pop ebx
-		popad
-
-		push 5BB290h
-		retn
-	}
-}
-
 void AssetHandler::ExposeTemporaryAssets(bool expose)
 {
 	AssetHandler::ShouldSearchTempAssets = expose;
@@ -328,10 +210,7 @@ void AssetHandler::post_load()
 
 	find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, AssetHandler::FindAsset);
 	
-	add_xasset_hook.create(0x485330, DB_AddXAsset);
-
-	//// Store empty assets
-	//utils::hook(0x5BB6EC, AssetHandler::StoreEmptyAssetStub, HOOK_CALL).install()->quick();
+	add_xasset_hook.create(0x485330, AssetHandler::DB_AddXAsset);
 }
 
 void AssetHandler::pre_destroy()
@@ -339,6 +218,7 @@ void AssetHandler::pre_destroy()
 	AssetHandler::ClearTemporaryAssets();
 
 	AssetHandler::Relocations.clear();
+	AssetHandler::RestrictSignal.clear();
 	AssetHandler::TypeCallbacks.clear();
 }
 
