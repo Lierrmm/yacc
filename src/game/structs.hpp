@@ -3827,6 +3827,304 @@ namespace game
 			int allocType;
 		};
 
+		struct EntHandle
+		{
+			unsigned __int16 number;
+			unsigned __int16 infoIndex;
+		};
+
+		struct entityShared_t
+		{
+			char linked;
+			char bmodel;
+			char svFlags;
+			int clientMask[2];
+			char inuse;
+			int broadcastTime;
+			float mins[3];
+			float maxs[3];
+			int contents;
+			float absmin[3];
+			float absmax[3];
+			float currentOrigin[3];
+			float currentAngles[3];
+			EntHandle ownerNum;
+			int eventTime;
+		};
+
+		struct gentity_s;
+
+		enum sessionState_t
+		{
+			SESS_STATE_PLAYING = 0x0,
+			SESS_STATE_DEAD = 0x1,
+			SESS_STATE_SPECTATOR = 0x2,
+			SESS_STATE_INTERMISSION = 0x3,
+		};
+
+		enum clientConnected_t
+		{
+			CON_DISCONNECTED = 0x0,
+			CON_CONNECTING = 0x1,
+			CON_CONNECTED = 0x2,
+		};
+
+		struct usercmd_s
+		{
+			int serverTime;
+			int buttons;
+			int angles[3];
+			char weapon;
+			char offHandIndex;
+			char forwardmove; //buttonsVertical
+			char rightmove; //buttonsHorizontal
+			float meleeChargeYaw;
+			char meleeChargeDist;
+			char selectedLocation[2];
+		};
+
+		struct playerTeamState_t
+		{
+			int location;
+		};
+
+		struct clientSession_t
+		{
+			sessionState_t sessionState;
+			int forceSpectatorClient;
+			int killCamEntity;
+			int status_icon;
+			int archiveTime;
+			int score;
+			int deaths;
+			int kills;
+			int assists;
+			unsigned __int16 scriptPersId;
+			clientConnected_t connected;
+			usercmd_s cmd;
+			usercmd_s oldcmd;
+			int localClient;
+			int predictItemPickup;
+			char newnetname[16];
+			int maxHealth;
+			int enterTime;
+			playerTeamState_t teamState;
+			int voteCount;
+			int teamVoteCount;
+			float moveSpeedScaleMultiplier;
+			int viewmodelIndex;
+			int noSpectate;
+			int teamInfo;
+			clientState_s cs;
+			int psOffsetTime;
+		};
+
+		struct gclient_s
+		{
+			playerState_s ps;
+			clientSession_t sess;
+			int spectatorClient;
+			int noclip;
+			int ufo;
+			int bFrozen;
+			int lastCmdTime;
+			int buttons;
+			int oldbuttons;
+			int latched_buttons;
+			int buttonsSinceLastFrame;
+			float oldOrigin[3];
+			float fGunPitch;
+			float fGunYaw;
+			int damage_blood;
+			float damage_from[3];
+			int damage_fromWorld;
+			int accurateCount;
+			int accuracy_shots;
+			int accuracy_hits;
+			int inactivityTime;
+			int inactivityWarning;
+			int lastVoiceTime;
+			int switchTeamTime;
+			float currentAimSpreadScale;
+			gentity_s* persistantPowerup;
+			int portalID;
+			int dropWeaponTime;
+			int sniperRifleFiredTime;
+			float sniperRifleMuzzleYaw;
+			int PCSpecialPickedUpCount;
+			EntHandle useHoldEntity;
+			int useHoldTime;
+			int useButtonDone;
+			int iLastCompassPlayerInfoEnt;
+			int compassPingTime;
+			int damageTime;
+			float v_dmg_roll;
+			float v_dmg_pitch;
+			float swayViewAngles[3];
+			float swayOffset[3];
+			float swayAngles[3];
+			float vLastMoveAng[3];
+			float fLastIdleFactor;
+			float vGunOffset[3];
+			float vGunSpeed[3];
+			int weapIdleTime;
+			int lastServerTime;
+			int lastSpawnTime;
+			unsigned int lastWeapon;
+			bool previouslyFiring;
+			bool previouslyUsingNightVision;
+			bool previouslySprinting;
+			int hasRadar;
+			int lastStand;
+			int lastStandTime;
+		};
+
+		struct turretInfo_s
+		{
+			int inuse;
+			int flags;
+			int fireTime;
+			float arcmin[2];
+			float arcmax[2];
+			float dropPitch;
+			int stance;
+			int prevStance;
+			int fireSndDelay;
+			float userOrigin[3];
+			float playerSpread;
+			float pitchCap;
+			int triggerDown;
+			char fireSnd;
+			char fireSndPlayer;
+			char stopSnd;
+			char stopSndPlayer;
+		};
+
+		struct item_ent_t
+		{
+			int ammoCount;
+			int clipAmmoCount;
+			int index;
+		};
+
+		struct __declspec(align(4)) trigger_ent_t
+		{
+			int threshold;
+			int accumulate;
+			int timestamp;
+			int singleUserEntIndex;
+			bool requireLookAt;
+		};
+
+		struct mover_ent_t
+		{
+			float decelTime;
+			float aDecelTime;
+			float speed;
+			float aSpeed;
+			float midTime;
+			float aMidTime;
+			float pos1[3];
+			float pos2[3];
+			float pos3[3];
+			float apos1[3];
+			float apos2[3];
+			float apos3[3];
+		};
+
+		struct corpse_ent_t
+		{
+			int deathAnimStartTime;
+		};
+
+		enum MissileStage
+		{
+			MISSILESTAGE_SOFTLAUNCH = 0x0,
+			MISSILESTAGE_ASCENT = 0x1,
+			MISSILESTAGE_DESCENT = 0x2,
+		};
+
+		enum MissileFlightMode
+		{
+			MISSILEFLIGHTMODE_TOP = 0x0,
+			MISSILEFLIGHTMODE_DIRECT = 0x1,
+		};
+
+		struct missile_ent_t
+		{
+			float time;
+			int timeOfBirth;
+			float travelDist;
+			float surfaceNormal[3];
+			team_t team;
+			float curvature[3];
+			float targetOffset[3];
+			MissileStage stage;
+			MissileFlightMode flightMode;
+		};
+
+		union $4C7580D783CB81EAAF8D9BB4061D1D71
+		{
+			item_ent_t item[2];
+			trigger_ent_t trigger;
+			mover_ent_t mover;
+			corpse_ent_t corpse;
+			missile_ent_t missile;
+		};
+
+		struct tagInfo_s
+		{
+			gentity_s* parent;
+			gentity_s* next;
+			unsigned __int16 name;
+			int index;
+			float axis[4][3];
+			float parentInvAxis[4][3];
+		};
+
+		struct gentity_s
+		{
+			entityState_s s;
+			entityShared_t r;
+			gclient_s* client;
+			turretInfo_s* pTurretInfo;
+			void* scr_vehicle;
+			unsigned __int16 model;
+			char physicsObject;
+			char takedamage;
+			char active;
+			char nopickup;
+			char handler;
+			char team;
+			unsigned __int16 classname;
+			unsigned __int16 target;
+			unsigned __int16 targetname;
+			unsigned int attachIgnoreCollision;
+			int spawnflags;
+			int flags;
+			int eventTime;
+			int freeAfterEvent;
+			int unlinkAfterEvent;
+			int clipmask;
+			int processedFrame;
+			EntHandle parent;
+			int nextthink;
+			int health;
+			int maxHealth;
+			int damage;
+			int count;
+			gentity_s* chain;
+			$4C7580D783CB81EAAF8D9BB4061D1D71 ___u30;
+			EntHandle missileTargetEnt;
+			tagInfo_s* tagInfo;
+			gentity_s* tagChildren;
+			unsigned __int16 attachModelNames[19];
+			unsigned __int16 attachTagNames[19];
+			int useCount;
+			gentity_s* nextFree;
+		};
+
+
 		//* Custom
 		enum itemTextStyle
 		{

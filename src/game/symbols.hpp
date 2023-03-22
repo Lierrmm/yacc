@@ -108,6 +108,9 @@ namespace game
 
 		WEAK symbol<int()> Sys_Milliseconds { 0x0, 0x573650 };
 		WEAK symbol<DWORD()> Sys_SuspendOtherThreads{ 0x0, 0x506150 };
+		//WEAK symbol<gentity_s* ()> SV_AddTestClient{0x0, 0x527F30};
+		WEAK symbol<void(int a, int b, gentity_s* ent, unsigned short constString, unsigned int numArgs)> Scr_Notify{0x0, 0x51CDE0};
+		WEAK symbol<unsigned int(const char* string, int user)> SL_GetString{0x0, 0x512DA0};
 
 		// symbols
 		WEAK symbol<bool> CL_IsCgameInitialized{ 0x0, 0xC578F6 };
@@ -143,5 +146,6 @@ namespace game
 		WEAK symbol<DB_GetXAssetNameHandler_t> DB_GetXAssetNameHandlers{ 0x0, 0x71E8C8 };
 		WEAK symbol<HANDLE> database_handle{ 0x0, 0x14E09A4 };
 		WEAK symbol<DB_LoadData> g_load{ 0x0, 0xE2C4C8 };
+		WEAK symbol<int> sv{ 0x0, 0x17F47C8 };
 	}
 }

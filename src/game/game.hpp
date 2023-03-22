@@ -109,6 +109,8 @@ namespace game
 		extern int StringTable_HashString(const char* string);
 		extern const char* TableLookup(StringTable* stringtable, int row, int column);
 
+		extern bool SV_Loaded();
+
 		namespace glob
 		{
 			// general

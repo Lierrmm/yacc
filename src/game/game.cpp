@@ -736,6 +736,11 @@ namespace game
 			return value;
 		}
 
+		bool SV_Loaded()
+		{
+			return *game::native::sv == 2;
+		}
+
 		namespace glob
 		{
 			// general
