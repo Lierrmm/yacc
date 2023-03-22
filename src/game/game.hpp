@@ -9,8 +9,8 @@
 
 // *
 // Common
-#define FF_LOAD_ADDON_MENU		false
-#define FF_ADDON_MENU_NAME		"xcommon_yacc"
+#define FF_LOAD_ADDON_MENU		true
+#define FF_ADDON_MENU_NAME		"yacc"
 
 #define NUM_CUSTOM_CLASSES 15
 

@@ -93,7 +93,7 @@ IMAGE_LOGO   IMAGE "resources/logo.bmp"
 
 MENU_MAIN   RCDATA "resources/main.html"
 
-COMMON_FF   RCDATA "resources/xcommon_yacc.ff"
+COMMON_FF   RCDATA "resources/yacc.ff"
 
 
 #endif    // English (United States) resources
