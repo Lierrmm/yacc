@@ -20,4 +20,5 @@ private:
 
 	static void __stdcall SetStringStub(const char* key, const char* value, bool isEnglish);
 	static void LoadLanguageStrings(bool forceEnglish);
+	static void SELoadLanguageStub();
 };

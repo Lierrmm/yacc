@@ -155,8 +155,19 @@ void localization::LoadLanguageStrings(bool forceEnglish)
 	{
 		game::native::SE_Load("localizedstrings/yacc_english.str", 0);
 	}
+}
 
-	SELoadLanguageHook.invoke(forceEnglish);
+__declspec(naked) void localization::SELoadLanguageStub()
+{
+	__asm
+	{
+		pushad
+		call localization::LoadLanguageStrings
+		popad
+
+		push 534A60h
+		retn
+	}
 }
 
 void localization::post_load()
@@ -181,10 +192,11 @@ void localization::post_load()
 	// Resolving hook
 	utils::hook(0x533500, localization::Get, HOOK_JUMP).install()->quick();
 
-	SELoadLanguageHook.create(game::native::SE_LoadLanguage, localization::LoadLanguageStrings); // Hook the actual function instead of its caller
+	//SELoadLanguageHook.create(game::native::SE_LoadLanguage, localization::LoadLanguageStrings); // Hook the actual function instead of its caller
+	utils::hook(0x534DBF, localization::SELoadLanguageStub, HOOK_CALL).install()->quick();
 
 	// Overwrite SetString
-	//utils::hook(0x4CE5EE, localization::SetStringStub, HOOK_CALL).install()->quick();
+	utils::hook(0x534749, localization::SetStringStub, HOOK_CALL).install()->quick();
 
 	localization::UseLocalization = game::native::Dvar_RegisterBool("ui_localize", "Use localization strings", true, game::native::DVAR_FLAG_NONE);
 

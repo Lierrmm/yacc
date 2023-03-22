@@ -741,6 +741,16 @@ namespace game
 			return *game::native::sv == 2;
 		}
 
+		void CG_DeployServerCommand(int localClientNum)
+		{
+			static const uint32_t oCGDeployServerCommand = 0x448CD0;
+			__asm
+			{
+				xor eax, localClientNum;
+				call oCGDeployServerCommand;
+			}
+		}
+
 		namespace glob
 		{
 			// general

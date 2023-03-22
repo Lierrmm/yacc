@@ -119,6 +119,7 @@ namespace game
 		WEAK symbol<UiContext> ui_context{ 0x0, 0xCAE6200 };
 		WEAK symbol<UiContext> ui_cg_dc{ 0x0, 0x73EFA8 };
 		WEAK symbol<CmdArgs> cmd_args{ 0x0, 0x1408B40 };
+		WEAK symbol<CmdArgs> sv_cmd_args{ 0x0, 0x142B408 };
 		WEAK symbol<cmd_function_s*> cmd_ptr{ 0x0, 0x1408B3C };
 
 		WEAK symbol<PlayerKeyState> playerKeys{ 0x0, 0x8E9DB8 };
