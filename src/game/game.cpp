@@ -702,7 +702,6 @@ namespace game
 			return len;
 		}
 
-
 		// Not in COD4 but we need some form of value
 		int StringTable_HashString(const char* string)
 		{
@@ -725,6 +724,16 @@ namespace game
 			}
 
 			return v4;
+		}
+
+		const char* TableLookup(StringTable* stringtable, int row, int column)
+		{
+			if (!stringtable || !stringtable->values || row >= stringtable->rowCount || column >= stringtable->columnCount) return "";
+
+			const char* value = stringtable->values[row * stringtable->columnCount + column].string;
+			if (!value) value = "";
+
+			return value;
 		}
 
 		namespace glob

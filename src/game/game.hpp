@@ -107,6 +107,7 @@ namespace game
 		extern void FS_FreeFile(void* buf);
 		extern int FS_ReadFile(const char* path, char** buffer);
 		extern int StringTable_HashString(const char* string);
+		extern const char* TableLookup(StringTable* stringtable, int row, int column);
 
 		namespace glob
 		{
