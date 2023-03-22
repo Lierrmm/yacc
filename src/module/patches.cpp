@@ -318,10 +318,6 @@ public:
 
 		utils::hook::set<uint8_t>(0x4643A2, 0xEB);
 
-		//utils::hook::nop(0x429719, 1033);
-		//utils::hook(0x429719, CG_InitConsoleCommandsPatched, HOOK_CALL).install()->quick();
-		//utils::hook(0x46BB6C, LoadMapLoadscreen, HOOK_CALL).install()->quick();
-
 		// remove MAX_PACKET_CMDs com_error
 		utils::hook::nop(0x4603D3, 5);
 	}
