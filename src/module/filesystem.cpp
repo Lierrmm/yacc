@@ -213,8 +213,9 @@ namespace filesystem
 		{
 			// fs_basegame
 			utils::hook::set<const char*>(SELECT_VALUE(0x0, 0x558B78), "yacc");
-			//utils::hook::set(0x6EDAF4, "yacc/images/splash.bmp"); ignore for now
+			utils::hook::set(0x573774, "yacc/images/splash.bmp");
 			utils::hook::set(0x574C7A, "yacc/images/logo.bmp");
+			utils::hook::set(0x5D45D0, "YACC - COD4 1.8");
 			
 			fs_startup_hook.create(SELECT_VALUE(0x0, 0x558D30), fs_startup_stub);
 
