@@ -57,13 +57,14 @@ DECLSPEC_NORETURN void WINAPI RaiseException_Stub(DWORD dwExceptionCode,
 	DWORD nNumberOfArguments,
 	CONST ULONG_PTR* lpArguments)
 {
+
+#ifdef DEBUG
 	printf("[RaiseException] %d %d %d %p\n", dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
-	//RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
+#endif // DEBUG
 }
 
 BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, const PVOID pvParam, const UINT fWinIni)
 {
-	printf("RUNNIN POST UNPACK\n");
 	module_loader::post_unpack();
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }

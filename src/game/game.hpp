@@ -14,6 +14,8 @@
 
 #define NUM_CUSTOM_CLASSES 15
 
+#define BASEGAME "yacc"
+
 namespace game
 {
 	bool is_mp();
@@ -110,6 +112,7 @@ namespace game
 		extern const char* TableLookup(StringTable* stringtable, int row, int column);
 
 		extern bool SV_Loaded();
+		extern void FreeMemory(void* Block);
 
 		namespace glob
 		{

@@ -99,8 +99,8 @@ namespace game
 		WEAK symbol<void(int level, const char* error, ...)> Com_Error { 0x0, 0x4F7ED0 };
 		WEAK symbol<int(const char* a1, int* a2, int a3)> FS_FOpenFileRead{ 0x0, 0x556020 };
 		WEAK symbol<int(char* Buffer, int ElementCount, int a3)> FS_Read{ 0x0, 0x5567E0 };
-		WEAK symbol<LPCSTR(LPCSTR psFileName, bool forceEnglish)> SE_Load{ 0x0, 0x534AF0 };
-		WEAK symbol<LPCSTR(bool forceEnglish)> SE_LoadLanguage{ 0x0, 0x534D70 };
+		WEAK symbol<char*(const char* file, bool forceEnglish)> SE_Load{ 0x0, 0x534AF0 };
+		WEAK symbol<char*(bool forceEnglish)> SE_LoadLanguage{ 0x0, 0x534D70 };
 
 		WEAK symbol<void()> R_BeginRemoteScreenUpdate{ 0x0, 0x5D74A0 };
 		WEAK symbol<void()> R_EndRemoteScreenUpdate{ 0x0, 0x5D74F0 };
@@ -108,9 +108,19 @@ namespace game
 
 		WEAK symbol<int()> Sys_Milliseconds { 0x0, 0x573650 };
 		WEAK symbol<DWORD()> Sys_SuspendOtherThreads{ 0x0, 0x506150 };
-		//WEAK symbol<gentity_s* ()> SV_AddTestClient{0x0, 0x527F30};
 		WEAK symbol<void(int a, int b, gentity_s* ent, unsigned short constString, unsigned int numArgs)> Scr_Notify{0x0, 0x51CDE0};
 		WEAK symbol<unsigned int(const char* string, int user)> SL_GetString{0x0, 0x512DA0};
+		WEAK symbol<script_t*(int length)> Script_Alloc{ 0x0, 0x41C2F0 };
+		WEAK symbol<void(script_t* script)> Script_SetupTokens{ 0x0, 0x41FDF0 };
+		WEAK symbol<int(char* buffer)> Script_CleanString{ 0x0, 0x56B510 };
+		WEAK symbol<void(int, const char*, ...)> PC_SourceError{ 0x0, 0x54F970 };
+		WEAK symbol<int(int handle, pc_token_s* pc_token)> PC_ReadTokenHandle{ 0x0, 0x41FC60 };  //maybe requires some asm
+		WEAK symbol<menuDef_t* (UiContext* dc, const char* name)> Menus_FindByName{ 0x0, 0x546880 };
+		WEAK symbol<bool(UiContext* dc, menuDef_t* menu)> Menu_IsVisible{ 0x0, 0x54ED30 }; //maybe requires some asm
+		WEAK symbol<MenuList* (const char* menuFile)> UI_LoadMenus{ 0x0, 0x552D70 };
+		WEAK symbol<void(UiContext* dc, MenuList* menuList)> UI_AddMenuList{ 0x0, 0x54F5D0 }; //maybe require some asm
+		WEAK symbol<MenuList* (const char* a2)> sub_552E10{ 0x0, 0x552E10 };
+		WEAK symbol<char* (int localClientNum, char* Destination)> CL_GetClientName{ 0x0, 0x471550 }; //failed to load .menu
 
 		// symbols
 		WEAK symbol<bool> CL_IsCgameInitialized{ 0x0, 0xC578F6 };
@@ -148,5 +158,7 @@ namespace game
 		WEAK symbol<HANDLE> database_handle{ 0x0, 0x14E09A4 };
 		WEAK symbol<DB_LoadData> g_load{ 0x0, 0xE2C4C8 };
 		WEAK symbol<int> sv{ 0x0, 0x17F47C8 };
+		WEAK symbol<source_t*> sourceFiles{ 0x0, 0x72FF90 };
+		WEAK symbol<keywordHash_t*> menuParseKeywordHash{ 0x0, 0xCB0D110 };
 	}
 }

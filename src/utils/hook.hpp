@@ -146,6 +146,21 @@ namespace utils
 		static void nop(void* place, size_t length);
 		static void nop(DWORD place, size_t length);
 
+		template <typename T> static std::function<T> Call(DWORD function)
+		{
+			return std::function<T>(reinterpret_cast<T*>(function));
+		}
+
+		template <typename T> static std::function<T> Call(FARPROC function)
+		{
+			return Call<T>(reinterpret_cast<DWORD>(function));
+		}
+
+		template <typename T> static std::function<T> Call(void* function)
+		{
+			return Call<T>(reinterpret_cast<DWORD>(function));
+		}
+
 		template <typename T>
 		static void set(void* place, T value)
 		{

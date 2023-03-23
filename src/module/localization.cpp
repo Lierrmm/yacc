@@ -140,16 +140,46 @@ void localization::ClearTemp()
 	localization::TempLocalizeMap.clear();
 }
 
-void __stdcall localization::SetStringStub(const char* key, const char* value, bool /*isEnglish*/)
+void __stdcall localization::SetStringStub(const char* value, bool isEnglish)
 {
-	localization::Set(key, value);
+	/*const char* key{};
+	uint32_t rand{};
+	__asm
+	{
+		mov rand, ecx
+		mov key, edi
+	}
+
+	localization::Set(key, "");*/
+
+	//	534747 8B CD                                   mov     ecx, ebp
+	const static uint32_t retn_addr = 0x53474E;
+	const static uint32_t block{};
+	__asm
+	{
+		pushad
+		mov eax, [esp + 18h]
+		popad
+
+		lea     edi, [esp + 434h + eax]
+		push    eax
+		push    ebx
+		mov ecx, ebp
+
+		pushad
+		call localization::Set
+		popad
+
+		jmp retn_addr
+	}
 }
 
 void localization::LoadLanguageStrings(bool forceEnglish)
 {
 	if (stringtable::FFile(utils::string::va("localizedstrings/yacc_%s.str", game::native::Win_GetLanguage())).exists())
 	{
-		game::native::SE_Load(utils::string::va("localizedstrings/yacc_%s.str", game::native::Win_GetLanguage()), 0);
+		const char* localizedstrings = utils::string::va("localizedstrings/yacc_%s.str", game::native::Win_GetLanguage());
+		game::native::SE_Load(localizedstrings, 0);
 	}
 	else if (stringtable::FFile("localizedstrings/yacc_english.str").exists())
 	{
@@ -196,7 +226,7 @@ void localization::post_load()
 	utils::hook(0x534DBF, localization::SELoadLanguageStub, HOOK_CALL).install()->quick();
 
 	// Overwrite SetString
-	utils::hook(0x534749, localization::SetStringStub, HOOK_CALL).install()->quick();
+	//utils::hook(0x534741, localization::SetStringStub, HOOK_CALL).install()->quick();
 
 	localization::UseLocalization = game::native::Dvar_RegisterBool("ui_localize", "Use localization strings", true, game::native::DVAR_FLAG_NONE);
 

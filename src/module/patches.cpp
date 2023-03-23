@@ -214,6 +214,26 @@ void copy_startup_files()
 	}
 
 	utils::io::write_file("yacc/images/logo.bmp", std::string(LPSTR(LockResource(logoHandle)), SizeofResource(nullptr, logoResource)));
+
+	const auto introResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(INTRO_VIDEO), RT_RCDATA);
+	if (!introResource)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to find custom intro!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	const auto introHandle = LoadResource(nullptr, introResource);
+	if (!introHandle)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to load custom intro!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	utils::io::write_file("yacc/video/IW_logo.bik", std::string(LPSTR(LockResource(introHandle)), SizeofResource(nullptr, introResource)));
 }
 
 class patches final : public module
@@ -320,6 +340,45 @@ public:
 
 		// remove MAX_PACKET_CMDs com_error
 		utils::hook::nop(0x4603D3, 5);
+
+		// fs_basegame
+		utils::hook::set<const char*>(SELECT_VALUE(0x0, 0x558B78), BASEGAME);
+
+		utils::hook::set(0x5D45D0, "YACC (" VERSION ") - COD4 1.8");
+		utils::hook::set(0x574BF7, "YACC (" VERSION ") - Console");
+
+		//sv_hostname
+		utils::hook::set(0x52AC3A, "YACCHost");
+
+		utils::hook::set(0x573774, BASEGAME "/images/splash.bmp");
+		utils::hook::set(0x574C7A, BASEGAME "/images/logo.bmp");
+
+		// increase font sizes for chat on higher resolutions
+		static float float13 = 13.0f;
+		static float float10 = 10.0f;
+		utils::hook::set<float*>(0x42B6DB, &float13);
+		utils::hook::set<float*>(0x42B6F5, &float10);
+
+		// remove limit on IWD file loading
+		utils::hook::set<BYTE>(0x558268, 0xEB);
+
+		// allow joining 'developer 1' servers
+		utils::hook::set<BYTE>(0x4A6343, 0xEB);
+
+		// disable atvi and codintro videos
+		utils::hook::nop(0x4F9602, 5);
+		
+
+#ifndef DEBUG
+		utils::hook::set<const char*>(0x4F95EC, "unskippablecinematic IW_logo\n");
+#endif // !DEBUG
+
+		utils::hook::set<const char*>(0x5EC9FC, "%s\\" BASEGAME "\\video\\%s.%s");
+
+		utils::hook::set<DWORD>(0x5ECA1A, 0x6F419C);
+
+		// Fix mouse lag
+		//utils::hook::nop(0x57616C, 8);
 	}
 
 	module_priority priority() const override

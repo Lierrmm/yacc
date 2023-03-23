@@ -12,20 +12,27 @@ void force_dvars_on_init()
 	if (const auto dedicated = game::native::Dvar_FindVar("dedicated"); dedicated && !dedicated->current.integer)
 	{
 		const auto sv_pure = game::native::Dvar_FindVar("sv_pure");
+		const auto com_introPlayed = game::native::Dvar_FindVar("com_introPlayed");
 		const auto sv_punkbuster = game::native::Dvar_FindVar("sv_punkbuster");
 		const auto r_zFeather = game::native::Dvar_FindVar("r_zFeather");
 		const auto r_distortion = game::native::Dvar_FindVar("r_distortion");
 		const auto r_fastSkin = game::native::Dvar_FindVar("r_fastSkin");
 
+		if (com_introPlayed && com_introPlayed->current.enabled)
+		{
+			game::native::dvar_set_value_dirty(com_introPlayed, false);
+			game::native::Cmd_ExecuteSingleCommand((game::native::LocalClientNum_t)0, 0, "com_introPlayed 0\n");
+		}
+
 		if (sv_pure && sv_pure->current.enabled)
 		{
-			game::native::dvar_set_value_dirty(sv_pure, false); // quick set the value
+			game::native::dvar_set_value_dirty(sv_pure, false);
 			game::native::Cmd_ExecuteSingleCommand((game::native::LocalClientNum_t)0, 0, "sv_pure 0\n");
 		}
 
 		if (sv_punkbuster && sv_punkbuster->current.enabled)
 		{
-			game::native::dvar_set_value_dirty(sv_punkbuster, false); // quick set the value
+			game::native::dvar_set_value_dirty(sv_punkbuster, false);
 			game::native::Cmd_ExecuteSingleCommand((game::native::LocalClientNum_t)0, 0, "sv_punkbuster 0\n");
 		}
 

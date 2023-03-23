@@ -6,6 +6,8 @@
 #include "console.hpp"
 #include "filesystem.hpp"
 
+#include "version.hpp"
+
 #include <utils/io.hpp>
 #include <utils/hook.hpp>
 #include <utils/properties.hpp>
@@ -211,12 +213,13 @@ namespace filesystem
 	public:
 		void post_load() override
 		{
-			// fs_basegame
-			utils::hook::set<const char*>(SELECT_VALUE(0x0, 0x558B78), "yacc");
-			utils::hook::set(0x573774, "yacc/images/splash.bmp");
-			utils::hook::set(0x574C7A, "yacc/images/logo.bmp");
-			utils::hook::set(0x5D45D0, "YACC - COD4 1.8");
-			
+			// ignore 'no iwd files found in main'
+			utils::hook::nop(0x558032, 5);
+
+			// Ignore bad magic, when trying to free hunk when it's already cleared
+			utils::hook::set<WORD>(0x55E8ED, 0xC35E);
+
+
 			fs_startup_hook.create(SELECT_VALUE(0x0, 0x558D30), fs_startup_stub);
 
 			utils::hook(SELECT_VALUE(0x0, 0x56D480), sys_default_install_path_stub, HOOK_JUMP).install()->quick();

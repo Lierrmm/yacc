@@ -4209,5 +4209,99 @@ namespace game
 			int		val_3;
 			int		langIndex;
 		} searchpath_t;
+
+
+#define MAX_TOKEN 1024
+#define MAX_TOKENLENGTH 1024
+
+		typedef struct punctuation_s
+		{
+			char* p;						//punctuation character(s)
+			int n;							//punctuation indication
+			struct punctuation_s* next;		//next punctuation
+		} punctuation_t;
+
+		typedef struct token_s
+		{
+			char string[MAX_TOKEN];			//available token
+			int type;						//last read token type
+			int subtype;					//last read token sub type
+			unsigned long int intvalue;	//integer value
+			long double floatvalue;			//floating point value
+			char* whitespace_p;				//start of white space before token
+			char* endwhitespace_p;			//start of white space before token
+			int line;						//line the token was on
+			int linescrossed;				//lines crossed in white space
+			struct token_s* next;			//next token in chain
+		} token_t;
+
+		typedef struct script_s
+		{
+			char filename[64];				//file name of the script
+			char* buffer;					//buffer containing the script
+			char* script_p;					//current pointer in the script
+			char* end_p;					//pointer to the end of the script
+			char* lastscript_p;				//script pointer before reading token
+			char* whitespace_p;				//begin of the white space
+			char* endwhitespace_p;			//end of the white space
+			int length;						//length of the script in bytes
+			int line;						//current line in script
+			int lastline;					//line before reading token
+			int tokenavailable;				//set by UnreadLastToken
+			int flags;						//several script flags
+			punctuation_t* punctuations;	//the punctuations used in the script
+			punctuation_t** punctuationtable;
+			token_t token;					//available token
+			struct script_s* next;			//next script in a chain
+		} script_t;
+
+		typedef struct define_s
+		{
+			char* name;							//define name
+			int flags;							//define flags
+			int builtin;						// > 0 if builtin define
+			int numparms;						//number of define parameters
+			token_t* parms;						//define parameters
+			token_t* tokens;					//macro tokens (possibly containing parm tokens)
+			struct define_s* next;				//next defined macro in a list
+			struct define_s* hashnext;			//next define in the hash chain
+		} define_t;
+
+		typedef struct indent_s
+		{
+			int type;								//indent type
+			int skip;								//true if skipping current indent
+			script_t* script;						//script the indent was in
+			struct indent_s* next;					//next indent on the indent stack
+		} indent_t;
+
+		typedef struct source_s
+		{
+			char filename[64];					//file name of the script
+			char includepath[64];					//path to include files
+			punctuation_t* punctuations;			//punctuations to use
+			script_t* scriptstack;					//stack with scripts of the source
+			token_t* tokens;						//tokens to read first
+			define_t* defines;						//list with macro definitions
+			define_t** definehash;					//hash chain with defines
+			indent_t* indentstack;					//stack with indents
+			int skip;								// > 0 if skipping conditional code
+			token_t token;							//last read token
+		} source_t;
+
+		typedef struct pc_token_s
+		{
+			int type;
+			int subtype;
+			int intvalue;
+			float floatvalue;
+			char string[MAX_TOKENLENGTH];
+		} pc_token_t;
+
+		typedef struct keywordHash_s
+		{
+			char* keyword;
+			bool(*func)(menuDef_t* item, int handle);
+		} keywordHash_t;
 	}
 }

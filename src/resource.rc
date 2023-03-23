@@ -91,6 +91,8 @@ BINARY_MP   RCDATA "resources/iw3mp.exe.diff"
 IMAGE_SPLASH IMAGE "resources/splash.bmp"
 IMAGE_LOGO   IMAGE "resources/logo.bmp"
 
+INTRO_VIDEO  RCDATA "resources/IW_logo.bik"
+
 MENU_MAIN   RCDATA "resources/main.html"
 
 COMMON_FF   RCDATA "resources/yacc.ff"

@@ -62,6 +62,12 @@ namespace utils::string
 		return text.find(substring) == 0;
 	}
 
+	bool ends_with(const std::string& haystack, const std::string& needle)
+	{
+		if (needle.size() > haystack.size()) return false;
+		return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
+	}
+
 	void strip(const char* in, char* out, size_t max)
 	{
 		if (!in || !out) return;
@@ -87,6 +93,38 @@ namespace utils::string
 		}
 
 		*out = '\0';
+	}
+
+	int IsSpace(int c)
+	{
+		if (c < -1) return 0;
+		return _isspace_l(c, nullptr);
+	}
+
+	std::string& LTrim(std::string& str)
+	{
+		str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int val)
+			{
+				return !IsSpace(val);
+			}));
+
+		return str;
+	}
+
+	// Trim from end
+	std::string& RTrim(std::string& str)
+	{
+		str.erase(std::find_if(str.rbegin(), str.rend(), [](int val)
+			{
+				return !IsSpace(val);
+			}).base(), str.end());
+
+		return str;
+	}
+
+	std::string& trim(std::string& str)
+	{
+		return LTrim(RTrim(str));
 	}
 
 	std::string convert(const std::wstring& wstr)

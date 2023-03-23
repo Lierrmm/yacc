@@ -751,6 +751,21 @@ namespace game
 			}
 		}
 
+		// Inline in COD4
+		void FreeMemory(void* Block)
+		{
+			/*if (*((DWORD*)Block - 1) == 305419896)
+				free((char*)Block - 4);*/
+		
+			/*v11 = (_DWORD*)(v8 - 4);
+			if (*v11 == 305419896)
+				free(v11)*/
+
+			auto v11 = ((DWORD*)Block - 4); //(*(DWORD*))(Block - 4);
+			if (*v11 == 305419896)
+				free(v11);
+		}
+
 		namespace glob
 		{
 			// general

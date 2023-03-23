@@ -80,11 +80,13 @@ namespace utils::string
 	std::string to_upper(std::string text);
 	void strip(const char* in, char* out, size_t max);
 	bool starts_with(const std::string& text, const std::string& substring);
+	bool ends_with(const std::string& haystack, const std::string& needle);
 	bool match_compare(const std::string& input, const std::string& text, bool exact);
 	std::string replace(std::string str, const std::string& from, const std::string& to);
 
 	std::wstring convert(const std::string& str);
 	std::string convert(const std::wstring& wstr);
+	std::string& trim(std::string& str);
 
 	std::string dump_hex(const std::string& data, const std::string& separator = " ");
 

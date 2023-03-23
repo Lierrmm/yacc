@@ -7,3 +7,4 @@
 #define IMAGE_SPLASH 312
 #define COMMON_FF	313
 #define IMAGE_LOGO	314
+#define INTRO_VIDEO	315
