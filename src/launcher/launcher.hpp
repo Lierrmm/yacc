@@ -7,7 +7,6 @@ public:
 	enum mode
 	{
 		none,
-		singleplayer,
 		multiplayer,
 	};
 

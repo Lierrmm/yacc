@@ -22,11 +22,6 @@ namespace binary_loader
 
 	std::string load_delta(const launcher::mode mode)
 	{
-		if (mode == launcher::mode::singleplayer)
-		{
-			return load_resource(BINARY_SP);
-		}
-
 		if (mode == launcher::mode::multiplayer)
 		{
 			return load_resource(BINARY_MP);
@@ -44,9 +39,6 @@ namespace binary_loader
 		{
 		case launcher::mode::multiplayer:
 			executable = "iw3mp.exe"s;
-			break;
-		case launcher::mode::singleplayer:
-			executable = "iw3sp.exe"s;
 			break;
 		default:
 			throw std::runtime_error("Invalid mode specified.");
@@ -126,7 +118,6 @@ namespace binary_loader
 
 	void create()
 	{
-		create_for_file("iw3sp.exe", load_base(launcher::mode::singleplayer));
 		create_for_file("iw3mp.exe", load_base(launcher::mode::multiplayer));
 	}
 

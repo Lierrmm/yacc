@@ -10,18 +10,13 @@ class fov final : public module
 {
 public:
 	void post_load() override
-	{
-		// Set dvar flag
+	{		
+		// Set dvar limit
+		static const auto cg_fov_limit = 120.0f;
+		utils::hook::set(0x438F7E, &cg_fov_limit);
 
-		if (game::is_mp())
-		{
-			// Set dvar limit
-			static const auto cg_fov_limit = 120.0f;
-			utils::hook::set(0x438F7E, &cg_fov_limit);
-
-			// Prevent value change via internal scripts
-			utils::hook(0x448CC5, &set_server_command_dvar_stub, HOOK_CALL).install()->quick();
-		}
+		// Prevent value change via internal scripts
+		utils::hook(0x448CC5, &set_server_command_dvar_stub, HOOK_CALL).install()->quick();
 	}
 
 private:

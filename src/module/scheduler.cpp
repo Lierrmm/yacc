@@ -157,12 +157,7 @@ void scheduler::post_start()
 
 void scheduler::post_unpack()
 {
-	utils::hook(SELECT_VALUE(0x0, 0x4FACE8), main_frame_stub, HOOK_CALL).install()->quick();
-
-	//utils::hook(SELECT_VALUE(0x57F7F8, 0x4978E2), r_end_frame_stub, HOOK_CALL).install()->quick();
-
-	//// Hook a function inside G_RunFrame. Fixes TLS issues
-	//utils::hook(SELECT_VALUE(0x52EFBC, 0x50CEC6), g_glass_update_stub, HOOK_CALL).install()->quick();
+	utils::hook(0x4FACE8, main_frame_stub, HOOK_CALL).install()->quick();
 }
 
 void scheduler::pre_destroy()

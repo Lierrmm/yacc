@@ -44,11 +44,6 @@ launcher::mode detect_mode_from_arguments()
 		return launcher::mode::multiplayer;
 	}
 
-	if (utils::flags::has_flag("singleplayer"))
-	{
-		return launcher::mode::singleplayer;
-	}
-
 	return launcher::mode::none;
 }
 
@@ -143,9 +138,6 @@ FARPROC load_binary(const launcher::mode mode)
 	{
 	case launcher::mode::multiplayer:
 		binary = "iw3mp.exe";
-		break;
-	case launcher::mode::singleplayer:
-		binary = "iw3sp.exe";
 		break;
 	case launcher::mode::none:
 	default:
@@ -242,11 +234,6 @@ int main()
 				const launcher launcher;
 				mode = launcher.run();
 				if (mode == launcher::mode::none) return 0;
-			}
-
-			if (mode == launcher::mode::singleplayer)
-			{
-				throw std::runtime_error("Singleplayer not supported yet");
 			}
 
 			entry_point = load_binary(mode);

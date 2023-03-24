@@ -27,8 +27,8 @@ void bullet::post_load()
 {
 	//bg_bulletRange = game::native::Dvar_RegisterFloat("bg_bulletRange", "Max range used when calculating the bullet end position", 8192.0f, 0.0f, std::numeric_limits<float>::max(), game::native::server_info);
 
-	bullet_fire_addr = SELECT_VALUE(0x0, 0x4A28FC);
-	utils::hook(SELECT_VALUE(0x0, 0x4A28F6), &bullet_fire_stub, HOOK_JUMP).install()->quick();
+	bullet_fire_addr = 0x4A28FC;
+	utils::hook(0x4A28F6, &bullet_fire_stub, HOOK_JUMP).install()->quick();
 }
 
 //REGISTER_MODULE(bullet)

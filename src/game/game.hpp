@@ -3,8 +3,6 @@
 #include "structs.hpp"
 #include "launcher/launcher.hpp"
 
-#define SELECT_VALUE(sp, mp) (game::is_sp() ? (sp) : (mp))
-
 #define SERVER_CD_KEY "YACC-CD-Key"
 
 // *
@@ -18,26 +16,16 @@
 
 namespace game
 {
-	bool is_mp();
-	bool is_sp();
-
 	template <typename T>
 	class symbol
 	{
 	public:
-		symbol(const size_t sp_address, const size_t mp_address)
-			: sp_object_(reinterpret_cast<T*>(sp_address))
-			, mp_object_(reinterpret_cast<T*>(mp_address))
+		symbol(const size_t mp_address) : mp_object_(reinterpret_cast<T*>(mp_address))
 		{
 		}
 
 		T* get() const
 		{
-			if (is_sp())
-			{
-				return sp_object_;
-			}
-
 			return mp_object_;
 		}
 
@@ -52,7 +40,6 @@ namespace game
 		}
 
 	private:
-		T* sp_object_;
 		T* mp_object_;
 	};
 
@@ -171,7 +158,7 @@ namespace game
 		template <typename T, typename R>
 		constexpr auto VectorScale(T v, R s, T out) { out[0] = v[0] * s; out[1] = v[1] * s; out[2] = v[2] * s; }
 
-		int Vec4Compare(const float* a, const float* b);
+		//int Vec4Compare(const float* a, const float* b);
 
 		bool I_islower(int c);
 		bool I_isupper(int c);

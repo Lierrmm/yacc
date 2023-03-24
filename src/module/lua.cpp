@@ -108,4 +108,4 @@ void lua_engine::post_unpack()
 }
 
 
-REGISTER_MODULE(lua_engine);
+//REGISTER_MODULE(lua_engine);

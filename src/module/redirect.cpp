@@ -10,7 +10,7 @@ namespace redirect
 {
 	namespace
 	{
-		void launch_complementary_game(const bool singleplayer, const std::string& mode = "")
+		void launch_complementary_game(const std::string& mode = "")
 		{
 			const auto self = game_module::get_host_module();
 
@@ -21,8 +21,7 @@ namespace redirect
 			ZeroMemory(&process_info, sizeof(process_info));
 			startup_info.cb = sizeof(startup_info);
 
-			auto* arguments = const_cast<char*>(utils::string::va("%s%s%s", self.get_path().data(),
-				(singleplayer ? " -singleplayer" : " -multiplayer"),
+			auto* arguments = const_cast<char*>(utils::string::va("%s%s%s", self.get_path().data(), " -multiplayer",
 				(mode.empty() ? "" : (" +"s + mode).data())));
 			CreateProcessA(self.get_path().data(), arguments, nullptr, nullptr, false, NULL, nullptr, nullptr,
 				&startup_info, &process_info);
@@ -43,11 +42,6 @@ namespace redirect
 		{
 			if (utils::string::starts_with(file, "steam://run/7940/"))
 			{
-				launch_complementary_game(true);
-				return HINSTANCE(33);
-			}
-			else if (utils::string::starts_with(file, "steam://run/7940/"))
-			{
 				std::string mode(file);
 				mode.erase(0, 20);
 				if (!mode.empty())
@@ -56,7 +50,7 @@ namespace redirect
 					mode = utils::string::replace(mode, "%2", " "); // ' '
 				}
 
-				launch_complementary_game(false, mode);
+				launch_complementary_game(mode);
 				return HINSTANCE(33);
 			}
 

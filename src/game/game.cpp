@@ -614,7 +614,7 @@ namespace game
 
 		XAssetEntry* db_find_x_asset_entry(XAssetType type_, const char* name)
 		{
-			static DWORD func = SELECT_VALUE(0x0, 0x484780);
+			static DWORD func = 0x484780;
 			XAssetEntry* result{};
 
 			__asm
@@ -818,16 +818,6 @@ namespace game
 		}
 
 		return mode;
-	}
-
-	bool is_mp()
-	{
-		return get_mode() == launcher::mode::multiplayer;
-	}
-
-	bool is_sp()
-	{
-		return get_mode() == launcher::mode::singleplayer;
 	}
 
 	void initialize(const launcher::mode _mode)

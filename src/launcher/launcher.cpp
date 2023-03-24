@@ -29,7 +29,7 @@ void launcher::create_main_menu()
 		if (!param.is_number()) return;
 
 		const auto number = param.get_number();
-		if (number == singleplayer || number == multiplayer)
+		if (number == multiplayer)
 		{
 			this->select_mode(static_cast<mode>(number));
 		}

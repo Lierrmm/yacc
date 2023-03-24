@@ -220,9 +220,9 @@ namespace filesystem
 			utils::hook::set<WORD>(0x55E8ED, 0xC35E);
 
 
-			fs_startup_hook.create(SELECT_VALUE(0x0, 0x558D30), fs_startup_stub);
+			fs_startup_hook.create(0x558D30, fs_startup_stub);
 
-			utils::hook(SELECT_VALUE(0x0, 0x56D480), sys_default_install_path_stub, HOOK_JUMP).install()->quick();
+			utils::hook(0x56D480, sys_default_install_path_stub, HOOK_JUMP).install()->quick();
 		}
 
 		module_priority priority() const override

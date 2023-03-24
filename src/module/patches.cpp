@@ -342,7 +342,7 @@ public:
 		utils::hook::nop(0x4603D3, 5);
 
 		// fs_basegame
-		utils::hook::set<const char*>(SELECT_VALUE(0x0, 0x558B78), BASEGAME);
+		utils::hook::set<const char*>(0x558B78, BASEGAME);
 
 		utils::hook::set(0x5D45D0, "YACC (" VERSION ") - COD4 1.8");
 		utils::hook::set(0x574BF7, "YACC (" VERSION ") - Console");
@@ -369,13 +369,14 @@ public:
 		utils::hook::nop(0x4F9602, 5);
 		
 
+		// make intro unskippable if in release
 #ifndef DEBUG
 		utils::hook::set<const char*>(0x4F95EC, "unskippablecinematic IW_logo\n");
 #endif // !DEBUG
 
 		utils::hook::set<const char*>(0x5EC9FC, "%s\\" BASEGAME "\\video\\%s.%s");
 
-		utils::hook::set<DWORD>(0x5ECA1A, 0x6F419C);
+		//utils::hook::set<DWORD>(0x5ECA1A, 0x6F419C);
 
 		// Fix mouse lag
 		//utils::hook::nop(0x57616C, 8);
@@ -389,4 +390,4 @@ public:
 
 
 
-REGISTER_MODULE(patches)
+REGISTER_MODULE(patches);

@@ -34,7 +34,7 @@ namespace
 
 		if (!*game::native::CL_IsCgameInitialized)
 		{
-			discord_presence.details = game::is_sp() ? "Singleplayer" : "Multiplayer";
+			discord_presence.details = "Multiplayer";
 			discord_presence.state = "Main Menu";
 
 			discord_presence.partySize = 0;
@@ -42,12 +42,10 @@ namespace
 
 			discord_presence.startTimestamp = 0;
 
-			discord_presence.largeImageKey = game::is_sp() ? "menu_singleplayer" : "menu_multiplayer";
+			discord_presence.largeImageKey = "menu_multiplayer";
 		}
 		else
-		{
-			if (game::is_sp()) return;
-			
+		{			
 			discord_presence.details = utils::string::va("%s on %s", game::native::UI_GetCurrentGameType(), game::native::UI_GetCurrentMapName());
 
 			discord_presence.partySize = game::native::cgs->snap != nullptr
