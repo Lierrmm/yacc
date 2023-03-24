@@ -160,5 +160,6 @@ namespace game
 		WEAK symbol<int> sv{  0x17F47C8 };
 		WEAK symbol<source_t*> sourceFiles{  0x72FF90 };
 		WEAK symbol<keywordHash_t*> menuParseKeywordHash{  0xCB0D110 };
+		WEAK symbol<searchpath_t*> fs_searchpaths{  0xD5E44D8 };
 	}
 }

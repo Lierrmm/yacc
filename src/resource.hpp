@@ -1,6 +1,5 @@
 #pragma once
 
-#define BINARY_SP 300
 #define BINARY_MP 301
 
 #define MENU_MAIN	310

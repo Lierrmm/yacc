@@ -1176,18 +1176,18 @@ namespace game
 
 		struct GfxImage
 		{
-			MapType mapType;
-			GfxTexture texture;
-			Picmip picmip;
-			bool noPicmip;
-			char semantic;
-			char track;
-			byte field_05;
-			unsigned __int16 field_06;
-			CardMemory cardMemory;
-			unsigned __int16 width;
-			unsigned __int16 height;
-			unsigned __int16 depth;
+			MapType mapType; // 0
+			GfxTexture texture; //4
+			Picmip picmip;   //8
+			bool noPicmip;   //10
+			char semantic;   //11
+			char track;      //12
+			byte field_05;   //13
+			unsigned __int16 field_06; //15
+			CardMemory cardMemory;  //23
+			unsigned __int16 width; //25
+			unsigned __int16 height; //27
+			unsigned __int16 depth;  //28
 			char category;
 			bool delayLoadPixels;
 			const char* name;
@@ -2988,6 +2988,11 @@ namespace game
 			PathData path;
 		};
 
+		struct GameWorldMp
+		{
+			const char* name;
+		};
+
 		struct RGBA_COLOR
 		{
 			float r, g, b, a;
@@ -3585,7 +3590,7 @@ namespace game
 			clipMap_t* clipMap;
 			ComWorld* comWorld;
 			GameWorldSp* gameWorldSp;
-			// 			GameWorldMp *gameWorldMp;
+			GameWorldMp* gameWorldMp;
 			MapEnts* mapEnts;
 			GfxWorld* gfxWorld;
 			GfxLightDef* lightDef;
@@ -3638,7 +3643,7 @@ namespace game
 
 		enum dvar_flags : std::uint16_t
 		{
-			none = 0x0,
+			dvar_none = 0x0,
 			saved = 0x1,
 			user_info = 0x2, // sent to server on connect or change
 			server_info = 0x4, // sent in response to front end requests
@@ -4205,8 +4210,8 @@ namespace game
 			pack_t* pack;		// only one of pack / dir will be non NULL
 			directory_t* dir;
 			bool	localized;
-			int		val_2;
-			int		val_3;
+			int		ignore;
+			int		ignorePureCheck;
 			int		langIndex;
 		} searchpath_t;
 

@@ -85,7 +85,6 @@ END
 
 102         ICON   "resources/icon.ico"
 
-BINARY_SP   RCDATA "resources/iw3sp.exe.diff"
 BINARY_MP   RCDATA "resources/iw3mp.exe.diff"
 
 IMAGE_SPLASH IMAGE "resources/splash.bmp"

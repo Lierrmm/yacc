@@ -7,7 +7,7 @@
 
 # Yet Another CoD Client
 
-Open source COD4 singleplayer and multiplayer client.
+Open source COD4 multiplayer client.
 
 This is experimental and is being used as a learning curve.
 

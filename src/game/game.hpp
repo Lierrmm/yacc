@@ -101,6 +101,10 @@ namespace game
 		extern bool SV_Loaded();
 		extern void FreeMemory(void* Block);
 
+		extern void Image_Release(game::native::GfxImage* image);
+		extern void Image_Setup(GfxImage* image, unsigned int width, unsigned int height, unsigned int depth, unsigned int flags, _D3DFORMAT format);
+		extern void unzClose(char* Block);
+		
 		namespace glob
 		{
 			// general

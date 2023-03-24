@@ -2,6 +2,7 @@
 #include "game.hpp"
 #include "dvars.hpp"
 #include <utils/string.hpp>
+#include <utils/hook.hpp>
 
 
 #define s_cmdList (*((game::native::GfxCmdArray**)(0xCC8F678)))
@@ -754,16 +755,56 @@ namespace game
 		// Inline in COD4
 		void FreeMemory(void* Block)
 		{
-			/*if (*((DWORD*)Block - 1) == 305419896)
-				free((char*)Block - 4);*/
-		
-			/*v11 = (_DWORD*)(v8 - 4);
-			if (*v11 == 305419896)
-				free(v11)*/
-
 			auto v11 = ((DWORD*)Block - 4); //(*(DWORD*))(Block - 4);
 			if (*v11 == 305419896)
 				free(v11);
+		}
+
+		void Image_Release(game::native::GfxImage* image)
+		{
+			if (*(unsigned __int8*)(image + 12) > 1u && *(BYTE*)(image + 12) != 4)
+			{
+				*(DWORD*)0xD4E9AAC -= *(DWORD*)(image + 16); // [0]
+				*(DWORD*)0xD4E9AB0 -= *(DWORD*)(image + 20);
+			}
+			auto v1 = *(DWORD*)(image + 4);
+			if (v1)
+			{
+				(*(void(__stdcall**)(DWORD))(*(DWORD*)v1 + 8))(*(DWORD*)(image + 4));
+				*(DWORD*)(image + 4) = 0;
+				*(DWORD*)(image + 16) = 0;
+				*(DWORD*)(image + 20) = 0;
+			}
+		}
+
+		__declspec(naked) void Image_Setup(GfxImage* image, unsigned int width, unsigned int height, unsigned int depth, unsigned int flags, _D3DFORMAT format)
+		{
+
+			image->width = width;
+			image->height = height;
+			image->depth = depth;
+			image->texture.loadDef->flags = flags;
+			image->texture.loadDef->format = format;
+			__asm
+			{
+				pushad
+				mov esi, [image] // image
+				mov ecx, 61F900h	// sub_61F900 create2dtexture
+				call ecx
+				popad
+				retn
+			}
+		}
+
+		void unzClose(char* Block)
+		{
+			if (*Block)
+			{
+				if (*(DWORD*)(*Block + 124))
+					utils::hook::Call<void(void*)>(0x591140);
+				fclose(*(FILE**)*Block);
+				free((void*)*Block);
+			}
 		}
 
 		namespace glob
