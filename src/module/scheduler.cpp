@@ -1,6 +1,6 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include "game/game.hpp"
+#include <utils/string.hpp>
 
 #include <utils/hook.hpp>
 #include <utils/thread.hpp>
@@ -168,5 +168,3 @@ void scheduler::pre_destroy()
 		thread.join();
 	}
 }
-
-REGISTER_MODULE(scheduler);

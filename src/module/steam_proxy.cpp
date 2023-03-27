@@ -134,7 +134,7 @@ private:
 		game_id.raw.type = 1; // k_EGameIDTypeGameMod
 		game_id.raw.app_id = app_id & 0xFFFFFF;
 
-		const auto mod_id = "OIW5";
+		const auto mod_id = "YACC";
 		game_id.raw.mod_id = *reinterpret_cast<const unsigned int*>(mod_id) | 0x80000000;
 
 		this->client_user_.invoke<bool>("SpawnProcess", self.get_path().data(), cmdline, our_directory, game_id.bits, title.data(), app_id, 0, 0, 0);

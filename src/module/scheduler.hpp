@@ -1,5 +1,5 @@
 #pragma once
-
+#include <utils/time.hpp>
 class scheduler final : public module
 {
 public:

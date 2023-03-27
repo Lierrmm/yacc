@@ -24,12 +24,10 @@ console::console()
 	(void)_dup2(this->handles_[1], 2);
 }
 
-void console::post_start()
+void console::post_load()
 {
 	scheduler::loop(std::bind(&console::log_messages, this), scheduler::pipeline::main);
-
 	this->console_runner_ = std::thread(std::bind(&console::runner, this));
-
 }
 
 void console::post_unpack()

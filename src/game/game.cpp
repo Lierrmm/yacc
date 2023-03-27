@@ -83,6 +83,10 @@ namespace game
 			return Dvar_RegisterBool_r(dvar_name, dvar_type::DVAR_TYPE_BOOL, flags, description, default_value, 0, 0, 0, 0, 0);
 		}
 
+		inline dvar_t* Dvar_RegisterInt(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t min_value, std::int32_t max_value, std::uint16_t flags) {
+			return Dvar_RegisterInt_r(dvar_name, dvar_type::DVAR_TYPE_INT, flags, description, default_value, 0, 0, 0, min_value, max_value);
+		}
+
 		/*inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
 			return Dvar_RegisterFloat_r(dvarName, defaultValue, minValue, maxValue, flags, description);
 		}*/
@@ -621,8 +625,10 @@ namespace game
 			__asm
 			{
 				pushad
-				push name
-				mov edi, type_
+				//push name
+				push type_
+				mov edi, name
+				//mov edi, type_
 				call func
 				add esp, 0x4
 				mov result, eax
@@ -807,6 +813,366 @@ namespace game
 			}
 		}
 
+#pragma region VM
+
+		void __cdecl RemoveRefToValue(int type, VariableUnion u)
+		{
+			unsigned int value;
+
+			value = type - VAR_BEGIN_REF;
+			if ((unsigned int)value < 4)
+			{
+				if (value == VAR_POINTER - VAR_BEGIN_REF)
+				{
+					RemoveRefToObject(u.pointerValue);
+				}
+				else if (value >= VAR_VECTOR - VAR_BEGIN_REF)
+				{
+					assert(value == VAR_VECTOR - VAR_BEGIN_REF);
+					RemoveRefToVector(u.vectorValue);
+				}
+				else
+				{
+					SL_RemoveRefToString(u.stringValue);
+				}
+			}
+		}
+
+		void __cdecl Scr_ClearOutParams()
+		{
+			while (gScrVmPub->outparamcount)
+			{
+				RemoveRefToValue(gScrVmPub->top->type, gScrVmPub->top->u);
+				--gScrVmPub->top;
+				--gScrVmPub->outparamcount;
+			}
+		}
+
+		void __cdecl IncInParam()
+		{
+			Scr_ClearOutParams();
+			if (gScrVmPub->top == gScrVmPub->maxstack)
+			{
+				//Sys_Error("Internal script stack overflow");
+				MessageBoxA(nullptr, "Internal script stack overflow", "Error", MB_ICONINFORMATION);
+			}
+			++gScrVmPub->top;
+			++gScrVmPub->inparamcount;
+		}
+
+		void __cdecl Scr_AddString(const char* value)
+		{
+			assert(value != NULL);
+
+			IncInParam();
+			gScrVmPub->top->type = VAR_STRING;
+			gScrVmPub->top->u.stringValue = SL_GetString(value, 0, strlen(value) + 1);
+		}
+
+		void Scr_NotifyInternal(int varNum, int constString, int numArgs)
+		{
+			VariableValue* curArg;
+			int z;
+			int ctype;
+
+			Scr_ClearOutParams();
+			curArg = gScrVmPub->top - numArgs;
+			z = gScrVmPub->inparamcount - numArgs;
+			if (varNum)
+			{
+				ctype = curArg->type;
+				curArg->type = 8;
+				gScrVmPub->inparamcount = 0;
+				VM_Notify(varNum, constString, gScrVmPub->top);
+				curArg->type = ctype;
+			}
+			while (gScrVmPub->top != curArg)
+			{
+				RemoveRefToValue(gScrVmPub->top->type, gScrVmPub->top->u);
+				--gScrVmPub->top;
+			}
+			gScrVmPub->inparamcount = z;
+		}
+
+		void Scr_NotifyLevel(int constString, unsigned int numArgs)
+		{
+			Scr_NotifyInternal(gScrVarPub->levelId, constString, numArgs);
+		}
+
+		unsigned int FindEntityId(int entnum, unsigned int classnum)
+		{
+			uint32_t orig = 0x516A20;
+			uint32_t result{};
+			__asm
+			{
+				mov ecx, [classnum]
+				mov eax, [entnum]
+				call orig
+				mov result, eax
+			}
+
+			return result;
+		}
+
+		void Scr_NotifyNum(int entityNum, unsigned int entType, unsigned int constString, unsigned int numArgs)
+		{
+			int entVarNum;
+
+			entVarNum = FindEntityId(entityNum, entType);
+
+			Scr_NotifyInternal(entVarNum, constString, numArgs);
+		}
+
+		void Scr_Notify(gentity_s* ent, unsigned short constString, unsigned int numArgs)
+		{
+			Scr_NotifyNum(ent->s.number, 0, constString, numArgs);
+		}
+#pragma endregion
+
+		signed int Sys_IsObjectSignaled(HANDLE hHandle)
+		{
+			if (WaitForSingleObject(hHandle, 0) == 0)
+			{
+				return 1;
+			}
+			return 0;
+		}
+		
+		bool Sys_IsDatabaseReady()
+		{
+			return Sys_IsObjectSignaled(*databaseCompletedEvent) == 1;
+		}
+
+		bool Sys_IsDatabaseReady2()
+		{
+			bool signaled = Sys_IsObjectSignaled(*databaseCompletedEvent2) == 1;
+			return signaled;
+		}
+
+#pragma region Debug Drawing
+
+		void QuatMultiply(const vec4_t* q1, const vec4_t* q2, vec4_t* res)
+		{
+			(*res)[0] = (*q2)[0] * (*q1)[0] - (*q2)[1] * (*q1)[1] - (*q2)[2] * (*q1)[2] - (*q2)[3] * (*q1)[3];
+			(*res)[1] = (*q2)[0] * (*q1)[1] + (*q2)[1] * (*q1)[0] - (*q2)[2] * (*q1)[3] + (*q2)[3] * (*q1)[2];
+			(*res)[2] = (*q2)[0] * (*q1)[2] + (*q2)[1] * (*q1)[3] + (*q2)[2] * (*q1)[0] - (*q2)[3] * (*q1)[1];
+			(*res)[3] = (*q2)[0] * (*q1)[3] - (*q2)[1] * (*q1)[2] + (*q2)[2] * (*q1)[1] + (*q2)[3] * (*q1)[0];
+		}
+
+		void QuatRot(vec3_t* vec, const vec4_t* quat)
+		{
+			vec4_t q{ (*quat)[3],(*quat)[0],(*quat)[1],(*quat)[2] };
+
+			vec4_t res{ 0, (*vec)[0], (*vec)[1], (*vec)[2] };
+			vec4_t res2;
+			vec4_t quat_conj{ q[0], -q[1], -q[2], -q[3] };
+			QuatMultiply(&q, &res, &res2);
+			QuatMultiply(&res2, &quat_conj, &res);
+
+			(*vec)[0] = res[1];
+			(*vec)[1] = res[2];
+			(*vec)[2] = res[3];
+		}
+
+		__declspec(naked) void R_AddDebugLine(float* /*color*/, float* /*v1*/, float* /*v2*/)
+		{
+			__asm
+			{
+				pushad
+
+				mov eax, [esp + 2Ch] // color
+				push eax
+
+				mov eax, [esp + 2Ch] // v2
+				push eax
+
+				mov eax, [esp + 2Ch] // v1
+				push eax
+
+				// debugglobals
+				mov esi, ds:0CC8F668h /*ds:66DAD78h*/
+				add esi, 1173276 /*268772*/
+
+				//mov edi, [esp + 2Ch] // color
+
+				mov eax, 5ED560h
+				call eax
+
+				add esp, 0Ch
+
+				popad
+				retn
+			}
+		}
+
+		__declspec(naked) void R_AddDebugString(float* color, float* pos, float scale, const char* string)
+		{
+			/*auto a1 = *reinterpret_cast<int*>(0xCC8F668 + 1173276);
+			utils::hook::Call<void(int, float*, float*, float, const char*)>(0x5ED6C0)(a1, pos, color, scale, string);
+			return;*/
+			__asm
+			{
+				pushad
+
+				mov eax, [esp + 30h] // string
+				push eax
+
+				mov eax, [esp + 30h] // scale
+				push eax
+
+				mov eax, [esp + 2Ch] // color
+				push eax
+
+				mov eax, [esp + 34h] // pos
+				push eax
+
+				// debugglobals
+				mov ecx, ds:0CC8F668h /*ds:66DAD78h*/
+				add ecx, 1173276 /*268772*/
+				push ecx
+
+				mov eax, 5ED6C0h
+				call eax
+
+				add esp, 14h
+
+				popad
+				retn
+			}
+		}
+
+		void R_AddDebugBounds(float* color, Bounds* b)
+		{
+			vec3_t v1, v2, v3, v4, v5, v6, v7, v8;
+			float* center = b->midPoint;
+			float* halfSize = b->halfSize;
+
+			v1[0] = center[0] - halfSize[0];
+			v1[1] = center[1] - halfSize[1];
+			v1[2] = center[2] - halfSize[2];
+
+			v2[0] = center[0] + halfSize[0];
+			v2[1] = center[1] - halfSize[1];
+			v2[2] = center[2] - halfSize[2];
+
+			v3[0] = center[0] - halfSize[0];
+			v3[1] = center[1] + halfSize[1];
+			v3[2] = center[2] - halfSize[2];
+
+			v4[0] = center[0] + halfSize[0];
+			v4[1] = center[1] + halfSize[1];
+			v4[2] = center[2] - halfSize[2];
+
+			v5[0] = center[0] - halfSize[0];
+			v5[1] = center[1] - halfSize[1];
+			v5[2] = center[2] + halfSize[2];
+
+			v6[0] = center[0] + halfSize[0];
+			v6[1] = center[1] - halfSize[1];
+			v6[2] = center[2] + halfSize[2];
+
+			v7[0] = center[0] - halfSize[0];
+			v7[1] = center[1] + halfSize[1];
+			v7[2] = center[2] + halfSize[2];
+
+			v8[0] = center[0] + halfSize[0];
+			v8[1] = center[1] + halfSize[1];
+			v8[2] = center[2] + halfSize[2];
+
+			// bottom
+			R_AddDebugLine(color, v1, v2);
+			R_AddDebugLine(color, v2, v4);
+			R_AddDebugLine(color, v4, v3);
+			R_AddDebugLine(color, v3, v1);
+
+			// top
+			R_AddDebugLine(color, v5, v6);
+			R_AddDebugLine(color, v6, v8);
+			R_AddDebugLine(color, v8, v7);
+			R_AddDebugLine(color, v7, v5);
+
+			// verticals
+			R_AddDebugLine(color, v1, v5);
+			R_AddDebugLine(color, v2, v6);
+			R_AddDebugLine(color, v3, v7);
+			R_AddDebugLine(color, v4, v8);
+		}
+
+		void R_AddDebugBounds(float* color, Bounds* b, const float(*quat)[4])
+		{
+			vec3_t v[8];
+			auto* center = b->midPoint;
+			auto* halfSize = b->halfSize;
+
+			v[0][0] = -halfSize[0];
+			v[0][1] = -halfSize[1];
+			v[0][2] = -halfSize[2];
+
+			v[1][0] = halfSize[0];
+			v[1][1] = -halfSize[1];
+			v[1][2] = -halfSize[2];
+
+			v[2][0] = -halfSize[0];
+			v[2][1] = halfSize[1];
+			v[2][2] = -halfSize[2];
+
+			v[3][0] = halfSize[0];
+			v[3][1] = halfSize[1];
+			v[3][2] = -halfSize[2];
+
+			v[4][0] = -halfSize[0];
+			v[4][1] = -halfSize[1];
+			v[4][2] = halfSize[2];
+
+			v[5][0] = halfSize[0];
+			v[5][1] = -halfSize[1];
+			v[5][2] = halfSize[2];
+
+			v[6][0] = -halfSize[0];
+			v[6][1] = halfSize[1];
+			v[6][2] = halfSize[2];
+
+			v[7][0] = halfSize[0];
+			v[7][1] = halfSize[1];
+			v[7][2] = halfSize[2];
+
+			for (auto& vec : v)
+			{
+				QuatRot(&vec, quat);
+				vec[0] += center[0];
+				vec[1] += center[1];
+				vec[2] += center[2];
+			}
+
+			// bottom
+			R_AddDebugLine(color, v[0], v[1]);
+			R_AddDebugLine(color, v[1], v[3]);
+			R_AddDebugLine(color, v[3], v[2]);
+			R_AddDebugLine(color, v[2], v[0]);
+
+			// top
+			R_AddDebugLine(color, v[4], v[5]);
+			R_AddDebugLine(color, v[5], v[7]);
+			R_AddDebugLine(color, v[7], v[6]);
+			R_AddDebugLine(color, v[6], v[4]);
+
+			// verticals
+			R_AddDebugLine(color, v[0], v[4]);
+			R_AddDebugLine(color, v[1], v[5]);
+			R_AddDebugLine(color, v[2], v[6]);
+			R_AddDebugLine(color, v[3], v[7]);
+		}
+#pragma endregion
+
+		float Vec3SqrDistance(const float v1[3], const float v2[3])
+		{
+			auto x = v2[0] - v1[0];
+			auto y = v2[1] - v1[1];
+			auto z = v2[2] - v1[2];
+
+			return x * x + y * y + z * z;
+		}
+
 		namespace glob
 		{
 			// general
@@ -847,6 +1213,7 @@ namespace game
 			// misc
 			int q3_last_projectile_weapon_used = 0; // ENUM Q3WeaponNames :: this var holds the last proj. weapon that got fired
 		}
+
 	}
 
 	launcher::mode mode = launcher::mode::none;

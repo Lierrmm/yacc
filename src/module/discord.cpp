@@ -101,7 +101,7 @@ public:
 
 		Discord_Initialize("1084807026217078855", &handlers, 1, nullptr);
 
-		scheduler::loop(update_discord, scheduler::pipeline::async, 20s);
+		scheduler::loop(update_discord, scheduler::async, 20s);
 
 		initialized_ = true;
 	}

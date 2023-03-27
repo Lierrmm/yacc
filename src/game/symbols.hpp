@@ -77,6 +77,7 @@ namespace game
 		WEAK symbol <bool()> Sys_IsMainThread{  0x506110 };
 		WEAK symbol <void()> RegisterDvars{  0x53C220 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_bool, std::uint16_t flags, const char* description, std::int32_t default_value, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t null4, std::int32_t null5)> Dvar_RegisterBool_r{  0x5667F0 };
+		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type typeInt, std::uint16_t flags, const char* description, std::int32_t defaultValue, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t minValue, std::int32_t maxValue)> Dvar_RegisterInt_r{  0x5667F0 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_enum, std::uint16_t flags, const char* description, std::int32_t default_index, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t enumSize, const char** enum_data)> Dvar_RegisterEnum_r{  0x5667F0 };
 		//WEAK symbol <dvar_t* (const char* dvar_name, float default_value, float min_value, float max_value, std::uint16_t flags, const char* description)> Dvar_RegisterFloat_r{  0x566B70 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_float2, std::uint16_t flags, const char* description, float x, float y, std::int32_t null1, std::int32_t null2, float min, float max)> Dvar_RegisterVec2_r{  0x5667F0 };
@@ -108,8 +109,7 @@ namespace game
 
 		WEAK symbol<int()> Sys_Milliseconds {  0x573650 };
 		WEAK symbol<DWORD()> Sys_SuspendOtherThreads{  0x506150 };
-		WEAK symbol<void(int a, int b, gentity_s* ent, unsigned short constString, unsigned int numArgs)> Scr_Notify{ 0x51CDE0};
-		WEAK symbol<unsigned int(const char* string, int user)> SL_GetString{ 0x512DA0};
+		WEAK symbol<unsigned int(const char* string, int user, int size)> SL_GetString{ 0x512DA0};
 		WEAK symbol<script_t*(int length)> Script_Alloc{  0x41C2F0 };
 		WEAK symbol<void(script_t* script)> Script_SetupTokens{  0x41FDF0 };
 		WEAK symbol<int(char* buffer)> Script_CleanString{  0x56B510 };
@@ -121,9 +121,22 @@ namespace game
 		WEAK symbol<void(UiContext* dc, MenuList* menuList)> UI_AddMenuList{  0x54F5D0 }; //maybe require some asm
 		WEAK symbol<MenuList* (const char* a2)> sub_552E10{  0x552E10 };
 		WEAK symbol<char* (int localClientNum, char* Destination)> CL_GetClientName{  0x471550 }; //failed to load .menu
-
+		WEAK symbol<gentity_s* ()> SV_AddTestClient{  0x527F30 };
+		WEAK symbol<void(unsigned int id)> RemoveRefToObject{  0x514A40 };
+		WEAK symbol<void(const float* vectorValue)> RemoveRefToVector{  0x514BD0 };
+		WEAK symbol<void(const int stringValue)> SL_RemoveRefToString{ 0x513450 };
+		WEAK symbol<void(unsigned int, unsigned int, VariableValue*)> VM_Notify{ 0x51C760 };
+		WEAK symbol<char*(int a1, const char* filename)> LoadModdableRawfile{ 0x511FF0 };
+		WEAK symbol<void()> DB_BeginRecoverLostDevice{ 0x484EC0 };
+		WEAK symbol<void()> DB_EndRecoverLostDevice{ 0x484F50 };
+		
+		
+		
+		
 		// symbols
 		WEAK symbol<bool> CL_IsCgameInitialized{  0xC578F6 };
+		WEAK symbol<HANDLE> databaseCompletedEvent { 0x14E09A4 };
+		WEAK symbol<HANDLE> databaseCompletedEvent2 { 0x14E09E4 };
 		WEAK symbol<ScreenPlacement> scrPlaceFull {  0xE2C420 };
 		WEAK symbol<ScreenPlacement> scrPlace{  0xE2C3D8 };
 		WEAK symbol<UiContext> ui_context{  0xCAE6200 };
@@ -161,5 +174,11 @@ namespace game
 		WEAK symbol<source_t*> sourceFiles{  0x72FF90 };
 		WEAK symbol<keywordHash_t*> menuParseKeywordHash{  0xCB0D110 };
 		WEAK symbol<searchpath_t*> fs_searchpaths{  0xD5E44D8 };
+		WEAK symbol<scrVmPub_t> gScrVmPub{  0x178C058 };
+		WEAK symbol<scrVarPub_t> gScrVarPub{  0x15C2610 };
+		WEAK symbol<GfxCmdBufState> gfxCmdBufState{  0xD4FBAF0 };
+		WEAK symbol<IDirect3DDevice9*> dx_ptr{  0xCC91808 };
+		WEAK symbol<gentity_s> g_entities{ 0x1280500 };
+		WEAK symbol<GfxScene> scene{ 0xCF07600 };
 	}
 }

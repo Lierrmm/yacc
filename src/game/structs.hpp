@@ -1352,12 +1352,17 @@ namespace game
 			float tvec[4];
 		};
 
+		struct Bounds
+		{
+			vec3_t midPoint;
+			vec3_t halfSize;
+		};
+
 		struct XModelCollSurf_s
 		{
 			XModelCollTri_s* collTris;
 			int numCollTris;
-			float mins[3];
-			float maxs[3];
+			Bounds bounds;
 			int boneIdx;
 			int contents;
 			int surfFlags;
@@ -1455,6 +1460,7 @@ namespace game
 		};
 #pragma pack(pop)
 
+
 		struct XModel
 		{
 			const char* name;
@@ -1476,8 +1482,7 @@ namespace game
 			int contents;
 			XBoneInfo* boneInfo;
 			float radius;
-			float mins[3];
-			float maxs[3];
+			Bounds bounds;
 			__int16 numLods;
 			__int16 collLod;
 			XModelStreamInfo streamInfo;
@@ -2678,11 +2683,6 @@ namespace game
 			cLeaf_t leaf;
 		};
 
-		struct Bounds
-		{
-			vec3_t midPoint;
-			vec3_t halfSize;
-		};
 
 		struct TriggerModel
 		{
@@ -3846,16 +3846,48 @@ namespace game
 			int clientMask[2];
 			char inuse;
 			int broadcastTime;
-			float mins[3];
-			float maxs[3];
+			/*float mins[3];
+			float maxs[3];*/
+			Bounds box;
 			int contents;
-			float absmin[3];
-			float absmax[3];
+			/*float absmin[3];
+			float absmax[3];*/
+			Bounds absBox;
 			float currentOrigin[3];
 			float currentAngles[3];
 			EntHandle ownerNum;
 			int eventTime;
 		};
+
+		enum EntHandler
+		{
+			ENT_HANDLER_NULL = 0x0,
+			ENT_HANDLER_TRIGGER_MULTIPLE = 0x1,
+			ENT_HANDLER_TRIGGER_HURT = 0x2,
+			ENT_HANDLER_TRIGGER_HURT_TOUCH = 0x3,
+			ENT_HANDLER_TRIGGER_DAMAGE = 0x4,
+			ENT_HANDLER_SCRIPT_MOVER = 0x5,
+			ENT_HANDLER_SCRIPT_MODEL = 0x6,
+			ENT_HANDLER_GRENADE = 0x7,
+			ENT_HANDLER_TIMED_OBJECT = 0x8,
+			ENT_HANDLER_ROCKET = 0x9,
+			ENT_HANDLER_CLIENT = 0xA,
+			ENT_HANDLER_CLIENT_SPECTATOR = 0xB,
+			ENT_HANDLER_CLIENT_DEAD = 0xC,
+			ENT_HANDLER_PLAYER_CLONE = 0xD,
+			ENT_HANDLER_TURRET_INIT = 0xE,
+			ENT_HANDLER_TURRET = 0xF,
+			ENT_HANDLER_DROPPED_ITEM = 0x10,
+			ENT_HANDLER_ITEM_INIT = 0x11,
+			ENT_HANDLER_ITEM = 0x12,
+			ENT_HANDLER_TRIGGER_USE = 0x13,
+			ENT_HANDLER_PRIMARY_LIGHT = 0x14,
+			ENT_HANDLER_PLAYER_BLOCK = 0x15,
+			ENT_HANDLER_VEHICLE = 0x16,
+			ENT_HANDLER_HELICOPTER = 0x17,
+			ENT_HANDLER_COUNT = 0x18
+		};
+
 
 		struct gentity_s;
 
@@ -4129,6 +4161,454 @@ namespace game
 			gentity_s* nextFree;
 		};
 
+		struct VariableStackBuffer
+		{
+			const char* pos;
+			uint16_t size;
+			uint16_t bufLen;
+			uint16_t localId;
+			char time;
+			char buf[1];
+		};
+
+		union VariableUnion
+		{
+			int intValue;
+			float floatValue;
+			unsigned int stringValue;
+			const float* vectorValue;
+			const char* codePosValue;
+			unsigned int pointerValue;
+			VariableStackBuffer* stackValue;
+			unsigned int entityOffset;
+		};
+
+		enum $0E0E04F36A22A28F2C0A7A22DC12DAE9
+		{
+			VAR_UNDEFINED = 0x0,
+			VAR_BEGIN_REF = 0x1,
+			VAR_POINTER = 0x1,
+			VAR_STRING = 0x2,
+			VAR_ISTRING = 0x3,
+			VAR_VECTOR = 0x4,
+			VAR_END_REF = 0x5,
+			VAR_FLOAT = 0x5,
+			VAR_INTEGER = 0x6,
+			VAR_CODEPOS = 0x7,
+			VAR_PRECODEPOS = 0x8,
+			VAR_FUNCTION = 0x9,
+			VAR_STACK = 0xA,
+			VAR_ANIMATION = 0xB,
+			VAR_DEVELOPER_CODEPOS = 0xC,
+			VAR_INCLUDE_CODEPOS = 0xD,
+			VAR_THREAD = 0xE,
+			VAR_NOTIFY_THREAD = 0xF,
+			VAR_TIME_THREAD = 0x10,
+			VAR_CHILD_THREAD = 0x11,
+			VAR_OBJECT = 0x12,
+			VAR_DEAD_ENTITY = 0x13,
+			VAR_ENTITY = 0x14,
+			VAR_ARRAY = 0x15,
+			VAR_DEAD_THREAD = 0x16,
+			VAR_COUNT = 0x17,
+			VAR_THREAD_LIST = 0x18,
+			VAR_ENDON_LIST = 0x19
+		};
+
+		typedef struct
+		{
+			VariableUnion u;
+			int type;
+		}VariableValue;
+
+		struct function_stack_t
+		{
+			const char* pos;
+			unsigned int localId;
+			unsigned int localVarCount;
+			VariableValue* top;
+			VariableValue* startTop;
+		};
+
+		struct function_frame_t
+		{
+			struct function_stack_t fs;
+			int topType;
+		};
+
+		typedef struct
+		{
+			unsigned int* localVars;
+			VariableValue* maxstack;
+			int function_count;
+			function_frame_t* function_frame;
+			VariableValue* top;
+			byte debugCode;
+			byte abort_on_error;
+			byte terminal_error;
+			byte pad;
+			unsigned int inparamcount;
+			unsigned int outparamcount;
+			function_frame_t function_frame_start[32];
+			VariableValue stack[2048];
+		}scrVmPub_t;
+
+		typedef struct
+		{
+			const char* fieldBuffer;
+			uint16_t canonicalStrCount;
+			byte developer;
+			byte developer_script;
+			byte evaluate;
+			byte pad[3];
+			const char* error_message;
+			int error_index;
+			unsigned int time;
+			unsigned int timeArrayId;
+			unsigned int pauseArrayId;
+			unsigned int levelId;
+			unsigned int gameId;
+			unsigned int animId;
+			unsigned int freeEntList;
+			unsigned int tempVariable;
+			byte bInited;
+			byte pad2;
+			uint16_t savecount;
+			unsigned int checksum;
+			unsigned int entId;
+			unsigned int entFieldName;
+			struct HunkUser* programHunkUser;
+			const char* programBuffer;
+			const char* endScriptBuffer;
+			const char* varUsagePos;
+			int totalObjectRefCount;
+			int numScriptValues;
+			int numScriptObjects;
+			int numScriptThreads;
+			int totalVectorRefCount;
+		}scrVarPub_t;
+
+		enum GfxRenderTargetId
+		{
+			R_RENDERTARGET_SAVED_SCREEN = 0x0,
+			R_RENDERTARGET_FRAME_BUFFER = 0x1,
+			R_RENDERTARGET_SCENE = 0x2,
+			R_RENDERTARGET_RESOLVED_POST_SUN = 0x3,
+			R_RENDERTARGET_RESOLVED_SCENE = 0x4,
+			R_RENDERTARGET_FLOAT_Z = 0x5,
+			R_RENDERTARGET_DYNAMICSHADOWS = 0x6,
+			R_RENDERTARGET_PINGPONG_0 = 0x7,
+			R_RENDERTARGET_PINGPONG_1 = 0x8,
+			R_RENDERTARGET_SHADOWCOOKIE = 0x9,
+			R_RENDERTARGET_SHADOWCOOKIE_BLUR = 0xA,
+			R_RENDERTARGET_POST_EFFECT_0 = 0xB,
+			R_RENDERTARGET_POST_EFFECT_1 = 0xC,
+			R_RENDERTARGET_SHADOWMAP_SUN = 0xD,
+			R_RENDERTARGET_SHADOWMAP_SPOT = 0xE,
+			R_RENDERTARGET_COUNT = 0xF,
+			R_RENDERTARGET_NONE = 0x10,
+		};
+
+		enum MaterialVertexDeclType
+		{
+			VERTDECL_GENERIC = 0x0,
+			VERTDECL_PACKED = 0x1,
+			VERTDECL_WORLD = 0x2,
+			VERTDECL_WORLD_T1N0 = 0x3,
+			VERTDECL_WORLD_T1N1 = 0x4,
+			VERTDECL_WORLD_T2N0 = 0x5,
+			VERTDECL_WORLD_T2N1 = 0x6,
+			VERTDECL_WORLD_T2N2 = 0x7,
+			VERTDECL_WORLD_T3N0 = 0x8,
+			VERTDECL_WORLD_T3N1 = 0x9,
+			VERTDECL_WORLD_T3N2 = 0xA,
+			VERTDECL_WORLD_T4N0 = 0xB,
+			VERTDECL_WORLD_T4N1 = 0xC,
+			VERTDECL_WORLD_T4N2 = 0xD,
+			VERTDECL_POS_TEX = 0xE,
+			VERTDECL_STATICMODELCACHE = 0xF,
+			VERTDECL_COUNT = 0x10,
+		};
+
+		struct gfxVertexSteamsUnk
+		{
+			unsigned int stride;
+			int* vb; // IDirect3DVertexBuffer9
+			unsigned int offset;
+		};
+
+		struct GfxCmdBufPrimState
+		{
+			IDirect3DDevice9* device; // IDirect3DDevice9
+			int* indexBuffer; // IDirect3DIndexBuffer9
+			MaterialVertexDeclType vertDeclType;
+			gfxVertexSteamsUnk streams[2];
+			int* vertexDecl; // IDirect3DVertexDeclaration9
+		};
+
+		enum GfxDepthRangeType
+		{
+			GFX_DEPTH_RANGE_SCENE = 0x0,
+			GFX_DEPTH_RANGE_VIEWMODEL = 0x2,
+			GFX_DEPTH_RANGE_FULL = 0xFFFFFFFF,
+		};
+
+		struct GfxCmdBufState
+		{
+			char refSamplerState[16];
+			unsigned int samplerState[16];
+			GfxTexture* samplerTexture[16];
+			GfxCmdBufPrimState prim;
+			Material* material;
+			MaterialTechniqueType techType;
+			MaterialTechnique* technique;
+			MaterialPass* pass;
+			unsigned int passIndex;
+			GfxDepthRangeType depthRangeType;
+			float depthRangeNear;
+			float depthRangeFar;
+			unsigned __int64 vertexShaderConstState[32];
+			unsigned __int64 pixelShaderConstState[256];
+			char alphaRef;
+			unsigned int refStateBits[2];
+			unsigned int activeStateBits[2];
+			MaterialPixelShader* pixelShader;
+			MaterialVertexShader* vertexShader;
+			GfxViewport viewport;
+			GfxRenderTargetId renderTargetId;
+			Material* origMaterial;
+			MaterialTechniqueType origTechType;
+		};
+
+		struct __declspec(align(4)) GfxSceneBrush
+		{
+			BModelDrawInfo info;
+			unsigned __int16 entnum;
+			GfxBrushModel* bmodel;
+			GfxPlacement placement;
+			char reflectionProbeIndex;
+		};
+
+		struct GfxSceneDef
+		{
+			int time;
+			float floatTime;
+			float viewOffset[3];
+		};
+
+		struct GfxVisibleLight
+		{
+			int drawSurfCount;
+			GfxDrawSurf drawSurfs[1024];
+		};
+
+		struct GfxShadowCookie
+		{
+			DpvsPlane planes[5];
+			volatile int drawSurfCount;
+			GfxDrawSurf drawSurfs[256];
+		};
+
+		struct GfxScaledPlacement
+		{
+			GfxPlacement base;
+			float scale;
+		};
+
+		struct GfxSkinnedXModelSurfs
+		{
+			void* firstSurf;
+		};
+
+		struct GfxSceneEntityCull
+		{
+			volatile unsigned int state;
+			Bounds bounds;
+			char lods[32];
+			GfxSkinnedXModelSurfs skinnedSurfs;
+		};
+
+		struct XAnimParent
+		{
+			unsigned __int16 flags;
+			unsigned __int16 children;
+		};
+
+		union $2714E77E76DE9429E851020801EAFDE5
+		{
+			XAnimParts* parts;
+			XAnimParent animParent;
+		};
+
+		struct XAnimEntry
+		{
+			unsigned __int16 numAnims;
+			unsigned __int16 parent;
+			$2714E77E76DE9429E851020801EAFDE5 ___u2;
+		};
+
+		struct XAnim_s
+		{
+			const char* debugName;
+			unsigned int size;
+			const char** debugAnimNames;
+			XAnimEntry entries[1];
+		};
+
+		struct __declspec(align(4)) XAnimTree_s
+		{
+			XAnim_s* anims;
+			int info_usage;
+			volatile int calcRefCount;
+			volatile int modifyRefCount;
+			unsigned __int16 children;
+		};
+
+
+		struct DSkelPartBits
+		{
+			int anim[4];
+			int control[4];
+			int skel[4];
+		};
+
+		struct DSkel
+		{
+			DSkelPartBits partBits;
+			int timeStamp;
+			DObjAnimMat* mat;
+		};
+
+		struct DObj_s
+		{
+			XAnimTree_s* tree;
+			unsigned __int16 duplicateParts;
+			unsigned __int16 entnum;
+			char duplicatePartsSize;
+			char numModels;
+			char numBones;
+			unsigned int ignoreCollision;
+			volatile int locked;
+			DSkel skel;
+			float radius;
+			unsigned int hidePartBits[4];
+			XModel** models;
+		};
+
+		union GfxSceneEntityInfo
+		{
+			cpose_t* pose;
+			unsigned __int16* cachedLightingHandle;
+		};
+
+		struct __declspec(align(4)) GfxSceneEntity
+		{
+			float lightingOrigin[3];
+			GfxPlacement placement;
+			GfxSceneEntityCull cull;
+			unsigned __int16 gfxEntIndex;
+			unsigned __int16 entnum;
+			DObj_s* obj;
+			GfxSceneEntityInfo info;
+			char reflectionProbeIndex;
+		};
+
+		struct __declspec(align(4)) GfxSceneModel
+		{
+			XModelDrawInfo info;
+			XModel* model;
+			DObj_s* obj;
+			GfxScaledPlacement placement;
+			unsigned __int16 gfxEntIndex;
+			unsigned __int16 entnum;
+			float radius;
+			unsigned __int16* cachedLightingHandle;
+			float lightingOrigin[3];
+			char reflectionProbeIndex;
+		};
+
+		union GfxEntCellRefInfo
+		{
+			float radius;
+			GfxBrushModel* bmodel;
+		};
+
+		struct GfxSceneDpvs
+		{
+			unsigned int localClientNum;
+			char* entVisData[7];
+			unsigned __int16* sceneXModelIndex;
+			unsigned __int16* sceneDObjIndex;
+			GfxEntCellRefInfo* entInfo[4];
+		};
+
+#pragma warning( push )
+#pragma warning( disable : 4324 )
+		struct __declspec(align(64)) GfxScene
+		{
+			GfxDrawSurf bspDrawSurfs[8192];
+			GfxDrawSurf smodelDrawSurfsLight[8192];
+			GfxDrawSurf entDrawSurfsLight[8192];
+			GfxDrawSurf bspDrawSurfsDecal[512];
+			GfxDrawSurf smodelDrawSurfsDecal[512];
+			GfxDrawSurf entDrawSurfsDecal[512];
+			GfxDrawSurf bspDrawSurfsEmissive[8192];
+			GfxDrawSurf smodelDrawSurfsEmissive[8192];
+			GfxDrawSurf entDrawSurfsEmissive[8192];
+			GfxDrawSurf fxDrawSurfsEmissive[8192];
+			GfxDrawSurf fxDrawSurfsEmissiveAuto[8192];
+			GfxDrawSurf fxDrawSurfsEmissiveDecal[8192];
+			GfxDrawSurf bspSunShadowDrawSurfs0[4096];
+			GfxDrawSurf smodelSunShadowDrawSurfs0[4096];
+			GfxDrawSurf entSunShadowDrawSurfs0[4096];
+			GfxDrawSurf bspSunShadowDrawSurfs1[8192];
+			GfxDrawSurf smodelSunShadowDrawSurfs1[8192];
+			GfxDrawSurf entSunShadowDrawSurfs1[8192];
+			GfxDrawSurf bspSpotShadowDrawSurfs0[256];
+			GfxDrawSurf smodelSpotShadowDrawSurfs0[256];
+			GfxDrawSurf entSpotShadowDrawSurfs0[512];
+			GfxDrawSurf bspSpotShadowDrawSurfs1[256];
+			GfxDrawSurf smodelSpotShadowDrawSurfs1[256];
+			GfxDrawSurf entSpotShadowDrawSurfs1[512];
+			GfxDrawSurf bspSpotShadowDrawSurfs2[256];
+			GfxDrawSurf smodelSpotShadowDrawSurfs2[256];
+			GfxDrawSurf entSpotShadowDrawSurfs2[512];
+			GfxDrawSurf bspSpotShadowDrawSurfs3[256];
+			GfxDrawSurf smodelSpotShadowDrawSurfs3[256];
+			GfxDrawSurf entSpotShadowDrawSurfs3[512];
+			GfxDrawSurf shadowDrawSurfs[512];
+			unsigned int shadowableLightIsUsed[32];
+			int maxDrawSurfCount[34];
+			volatile int drawSurfCount[34];
+			GfxDrawSurf* drawSurfs[34];
+			GfxDrawSurf fxDrawSurfsLight[8192];
+			GfxDrawSurf fxDrawSurfsLightAuto[8192];
+			GfxDrawSurf fxDrawSurfsLightDecal[8192];
+			GfxSceneDef def;
+			int addedLightCount;
+			GfxLight addedLight[32];
+			bool isAddedLightCulled[32];
+			float dynamicSpotLightNearPlaneOffset;
+			GfxVisibleLight visLight[4];
+			GfxVisibleLight visLightShadow[1];
+			GfxShadowCookie cookie[24];
+			unsigned int* entOverflowedDrawBuf;
+			volatile int sceneDObjCount;
+			GfxSceneEntity sceneDObj[512];
+			char sceneDObjVisData[7][512];
+			volatile int sceneModelCount;
+			GfxSceneModel sceneModel[1024];
+			char sceneModelVisData[7][1024];
+			volatile int sceneBrushCount;
+			GfxSceneBrush sceneBrush[512];
+			char sceneBrushVisData[3][512];
+			unsigned int sceneDynModelCount;
+			unsigned int sceneDynBrushCount;
+			DpvsPlane shadowFarPlane[2];
+			DpvsPlane shadowNearPlane[2];
+			GfxSceneDpvs dpvs;
+		};
+#pragma warning( pop )
 
 		//* Custom
 		enum itemTextStyle

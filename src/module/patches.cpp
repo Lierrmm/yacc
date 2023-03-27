@@ -380,6 +380,29 @@ public:
 
 		// Fix mouse lag
 		//utils::hook::nop(0x57616C, 8);
+
+		//command::add("spawnBot", [](command::params)
+		//{
+		//	auto* ent = game::native::SV_AddTestClient();
+
+		//	if (ent == nullptr)
+		//		return;
+		//
+		//	scheduler::once([ent]()
+		//	{	
+		//		game::native::Scr_AddString("autoassign");
+		//		auto menuResponse = game::native::SL_GetString("menuresponse", 0, strlen("menuresponse") + 1);
+		//		game::native::Scr_Notify(ent, menuResponse, 2);
+
+		//		scheduler::once([ent]()
+		//		{
+		//			game::native::Scr_AddString("autoassign");
+		//			//Game::Scr_AddString(Utils::String::VA("class%u", Utils::Cryptography::Rand::GenerateInt() % 5u));
+		//			game::native::Scr_AddString("changeclass");
+		//			game::native::Scr_Notify(ent, game::native::SL_GetString("menuresponse", 0, strlen("menuresponse") + 1), 2);
+		//		}, scheduler::async, 1s);
+		//	}, scheduler::async, 1s);
+		//});
 	}
 
 	module_priority priority() const override

@@ -49,6 +49,7 @@ namespace game
 		extern void dvar_set_value_dirty(dvar_t* dvar, bool value);
 		extern void ConDraw_Box(float* color, float x, float y, float width, float height);
 		extern inline dvar_t* Dvar_RegisterBool(const char* dvar_name, const char* description, std::int32_t default_value, std::uint16_t flags);
+		extern inline dvar_t* Dvar_RegisterInt(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t min_value, std::int32_t max_value, std::uint16_t flags);
 		//extern inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags);
 		extern inline dvar_t* Dvar_RegisterEnum(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t enum_size, const char** enum_data, std::uint16_t flags);
 		extern inline dvar_t* Dvar_RegisterVec2(const char* dvar_name, const char* description, float x, float y, float min_value, float max_value, std::uint16_t flags);
@@ -104,6 +105,18 @@ namespace game
 		extern void Image_Release(game::native::GfxImage* image);
 		extern void Image_Setup(GfxImage* image, unsigned int width, unsigned int height, unsigned int depth, unsigned int flags, _D3DFORMAT format);
 		extern void unzClose(char* Block);
+
+		extern void __cdecl Scr_AddString(const char* value);
+		extern void Scr_Notify(gentity_s* ent, unsigned short constString, unsigned int numArgs);
+
+		extern bool Sys_IsDatabaseReady();
+		extern bool Sys_IsDatabaseReady2();
+
+		extern void R_AddDebugBounds(float* color, Bounds* b);
+		extern void R_AddDebugBounds(float* color, Bounds* b, const float(*quat)[4]);
+		extern void R_AddDebugString(float* /*color*/, float* /*pos*/, float /*scale*/, const char* /*string*/);
+
+		extern float Vec3SqrDistance(const float v1[3], const float v2[3]);
 		
 		namespace glob
 		{

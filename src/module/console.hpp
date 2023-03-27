@@ -12,7 +12,7 @@ public:
 
 	console();
 
-	void post_start() override;
+	void post_load() override;
 	void pre_destroy() override;
 	void post_unpack() override;
 
