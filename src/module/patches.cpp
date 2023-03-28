@@ -376,33 +376,11 @@ public:
 
 		utils::hook::set<const char*>(0x5EC9FC, "%s\\" BASEGAME "\\video\\%s.%s");
 
-		//utils::hook::set<DWORD>(0x5ECA1A, 0x6F419C);
-
-		// Fix mouse lag
-		//utils::hook::nop(0x57616C, 8);
-
-		//command::add("spawnBot", [](command::params)
-		//{
-		//	auto* ent = game::native::SV_AddTestClient();
-
-		//	if (ent == nullptr)
-		//		return;
-		//
-		//	scheduler::once([ent]()
-		//	{	
-		//		game::native::Scr_AddString("autoassign");
-		//		auto menuResponse = game::native::SL_GetString("menuresponse", 0, strlen("menuresponse") + 1);
-		//		game::native::Scr_Notify(ent, menuResponse, 2);
-
-		//		scheduler::once([ent]()
-		//		{
-		//			game::native::Scr_AddString("autoassign");
-		//			//Game::Scr_AddString(Utils::String::VA("class%u", Utils::Cryptography::Rand::GenerateInt() % 5u));
-		//			game::native::Scr_AddString("changeclass");
-		//			game::native::Scr_Notify(ent, game::native::SL_GetString("menuresponse", 0, strlen("menuresponse") + 1), 2);
-		//		}, scheduler::async, 1s);
-		//	}, scheduler::async, 1s);
-		//});
+		utils::hook::nop(0x57616C, 8);
+		scheduler::loop([]()
+		{
+			SetThreadExecutionState(ES_DISPLAY_REQUIRED);
+		}, scheduler::main, 100ms);
 	}
 
 	module_priority priority() const override

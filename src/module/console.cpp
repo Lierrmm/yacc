@@ -4,7 +4,6 @@
 
 #include "console.hpp"
 #include "scheduler.hpp"
-//#include "log_file.hpp"
 
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>

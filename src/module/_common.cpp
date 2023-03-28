@@ -6,6 +6,7 @@
 #include <utils/string.hpp>
 #include "console.hpp"
 #include <utils/io.hpp>
+#include "command.hpp"
 
 void force_dvars_on_init()
 {
@@ -488,6 +489,29 @@ public:
 		utils::hook::nop(0x556673, 30);
 
 		utils::hook(0x558254, FS_MakeIWDsLocalized, HOOK_JUMP).install()->quick();
+
+		command::add("loadzone", [](command::params params) // unload zone and load zone again
+		{
+			if (params.length() < 2)
+			{
+				game::native::Com_PrintMessage(0, "Usage :: loadzone <zoneName>\n", 0);
+				return;
+			}
+
+			game::native::XZoneInfo info[2];
+			std::string zone = params[1];
+
+			// unload
+			info[0].name = 0;
+			info[0].allocFlags = game::native::XZONE_FLAGS::XZONE_ZERO;
+			info[0].freeFlags = game::native::XZONE_FLAGS::XZONE_MOD;
+
+			info[1].name = zone.data();
+			info[1].allocFlags = game::native::XZONE_FLAGS::XZONE_MOD;
+			info[1].freeFlags = game::native::XZONE_FLAGS::XZONE_ZERO;
+
+			game::native::DB_LoadXAssets(info, 2, 1);
+		});
 	}
 };
 
