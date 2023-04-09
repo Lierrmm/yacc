@@ -1,19 +1,21 @@
 #include <std_include.hpp>
 #include "string.hpp"
-
+#define VA_BUFFER_COUNT		64
+#define VA_BUFFER_SIZE		65536
 namespace utils::string
 {
 	const char* va(const char* fmt, ...)
 	{
-		static thread_local va_provider<8, 256> provider;
+		static char g_vaBuffer[VA_BUFFER_COUNT][VA_BUFFER_SIZE];
+		static int g_vaNextBufferIndex = 0;
 
 		va_list ap;
 		va_start(ap, fmt);
-
-		const char* result = provider.get(fmt, ap);
-
+		char* dest = g_vaBuffer[g_vaNextBufferIndex];
+		vsnprintf(g_vaBuffer[g_vaNextBufferIndex], VA_BUFFER_SIZE, fmt, ap);
+		g_vaNextBufferIndex = (g_vaNextBufferIndex + 1) % VA_BUFFER_COUNT;
 		va_end(ap);
-		return result;
+		return dest;
 	}
 
 	std::vector<std::string> split(const std::string& s, const char delim)
