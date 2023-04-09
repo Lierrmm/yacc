@@ -14,9 +14,6 @@
 
 game::native::dvar_t* g_dump_scripts;
 game::native::dvar_t* g_dump_images;
-game::native::dvar_t* db_print_default_assets;
-
-utils::hook::detour db_find_xasset_header_hook;
 
 /* ---------------------------------------------------------- */
 /* ---------------------- aspect ratio ---------------------- */
@@ -165,45 +162,6 @@ void dump_raw_image(const std::string& imageName, game::native::XAssetHeader hea
 	}
 }
 
-game::native::XAssetHeader db_find_xasset_header_stub(game::native::XAssetType type, const char* name)
-{
-	auto result = db_find_xasset_header_hook.invoke<game::native::XAssetHeader>(type, name);
-
-	if (type == game::native::XAssetType::ASSET_TYPE_MATERIAL)
-	{
-		utils::io::create_directory("raw/imagedump");
-		dump_images_from_material(name, result);
-	}
-
-	if (type == game::native::XAssetType::ASSET_TYPE_IMAGE)
-	{
-		utils::io::create_directory("raw/imagedump");
-		dump_raw_image(name, result);
-	}
-
-	if (type == game::native::XAssetType::ASSET_TYPE_MENU)
-	{
-		/*utils::io::create_directory("raw/menudump");
-		dump_menu(name, result);*/
-	}
-
-	if (type == game::native::XAssetType::ASSET_TYPE_RAWFILE)
-	{
-		if (result.rawfile)
-		{
-			const std::string override_rawfile_name = "override/"s + name;
-			const auto override_rawfile = db_find_xasset_header_hook.invoke<game::native::XAssetHeader>(type, override_rawfile_name.data());
-			if (override_rawfile.rawfile)
-			{
-				result.rawfile = override_rawfile.rawfile;
-				console::info("using override asset for rawfile: \"%s\"\n", name);
-			}
-		}
-	}
-
-	return result;
-}
-
 class ui final : public module
 {
 public:
@@ -326,17 +284,12 @@ public:
 			/* name		*/ "ui_ultrawide",
 			/* desc		*/ "menu helper",
 			/* default	*/ false,
-			/* flags	*/ game::native::dvar_flags::read_only);
-
-		//db_find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, db_find_xasset_header_stub);
-
-		db_print_default_assets = game::native::Dvar_RegisterBool("db_printDefaultAssets", "Print default asset usage", false, game::native::DVAR_FLAG_SAVED);
-
-		g_dump_images = game::native::Dvar_RegisterBool("g_dump_images", "Dump images to raw/imagedump", false, game::native::DVAR_FLAG_NONE);
+			/* flags	*/ game::native::dvar_flags::read_only);		
 	}
 
 	void post_unpack() override
 	{
+		
 	}
 };
 
