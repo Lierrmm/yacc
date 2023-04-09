@@ -95,6 +95,7 @@ INTRO_VIDEO  RCDATA "resources/IW_logo.bik"
 MENU_MAIN   RCDATA "resources/main.html"
 
 COMMON_FF   RCDATA "resources/yacc.ff"
+YACC_IWD    RCDATA "resources/yacc.iwd"
 
 
 #endif    // English (United States) resources
