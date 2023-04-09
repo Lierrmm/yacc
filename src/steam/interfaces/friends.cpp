@@ -3,9 +3,18 @@
 
 namespace steam
 {
+	char* GetUsername()
+	{
+		static char UserName[1024];
+		DWORD size = 1024;
+		GetUserNameA(UserName, &size);
+		return &(UserName[0]);
+	}
+
 	const char* friends::GetPersonaName()
 	{
-		return "GlaDos";
+		const char* username = GetUsername();
+		return username;
 	}
 
 	void friends::SetPersonaName(const char* pchPersonaName)

@@ -21,6 +21,12 @@ namespace steam
 		int m_e_chat_room_enter_response;
 	};
 
+	struct lobby_match_list final
+	{
+		enum { callback_id = 510 };
+		unsigned int m_nLobbiesMatching;
+	};
+
 	class matchmaking
 	{
 	protected:

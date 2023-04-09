@@ -26,7 +26,11 @@ namespace steam
 	int user::InitiateGameConnection(void* pAuthBlob, int cbMaxAuthBlob, steam_id steamIDGameServer,
 	                                 unsigned int unIPServer, unsigned short usPortServer, bool bSecure)
 	{
-		return 0;
+		/*return 0;*/
+		unsigned int steamID = GetSteamID().raw.account_id;
+		memcpy(pAuthBlob, &steamID, 4);
+
+		return 4;
 	}
 
 	void user::TerminateGameConnection(unsigned int unIPServer, unsigned short usPortServer)
@@ -39,7 +43,7 @@ namespace steam
 
 	bool user::GetUserDataFolder(char* pchBuffer, int cubBuffer)
 	{
-		return false;
+		return true;
 	}
 
 	void user::StartVoiceRecording()
@@ -82,7 +86,7 @@ namespace steam
 
 	int user::BeginAuthSession(const void* pAuthTicket, int cbAuthTicket, steam_id steamID)
 	{
-		return 0;
+		return 1;
 	}
 
 	void user::EndAuthSession(steam_id steamID)
@@ -95,7 +99,7 @@ namespace steam
 
 	unsigned int user::UserHasLicenseForApp(steam_id steamID, unsigned int appID)
 	{
-		return 0;
+		return 1;
 	}
 
 	bool user::BIsBehindNAT()
@@ -120,7 +124,6 @@ namespace steam
 		// Create the call response
 		const auto result = callbacks::register_call();
 		auto retvals = static_cast<encrypted_app_ticket_response*>(calloc(1, sizeof(encrypted_app_ticket_response)));
-		//::Utils::Memory::AllocateArray<EncryptedAppTicketResponse>();
 		retvals->m_e_result = 1;
 
 		// Return the call response
