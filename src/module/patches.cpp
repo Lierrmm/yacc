@@ -234,6 +234,27 @@ void copy_startup_files()
 	}
 
 	utils::io::write_file("yacc/video/IW_logo.bik", std::string(LPSTR(LockResource(introHandle)), SizeofResource(nullptr, introResource)));
+
+	// yacc.iwd
+	const auto yaccIwdResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(YACC_IWD), RT_RCDATA);
+	if (!yaccIwdResource)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to find custom yacc.iwd!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	const auto yaccIwdHandle = LoadResource(nullptr, yaccIwdResource);
+	if (!yaccIwdHandle)
+	{
+#if DEBUG
+		MessageBoxA(nullptr, "Failed to load custom yacc.iwd!", "ERROR", MB_ICONERROR);
+#endif
+		return;
+	}
+
+	utils::io::write_file("yacc/yacc.iwd", std::string(LPSTR(LockResource(yaccIwdHandle)), SizeofResource(nullptr, yaccIwdResource)));
 }
 
 class patches final : public module
@@ -282,20 +303,12 @@ public:
 		// Disable CD Key Checks
 		utils::hook::set(0x46C830, 0x90C301B0);
 
-		// *
-		// Console prints
-
 		// Print loaded modules to console
 		utils::hook(0x46B25A, CL_PreInitRenderer_stub, HOOK_JUMP).install()->quick();
 
 		// Remove "setstat: developer_script must be false"
 		utils::hook::nop(0x46B255, 5);
 
-		// Add newlines 
-		//utils::hook(0x5D4AF1, console_printfix_stub_01, HOOK_JUMP).install()->quick();
-		//utils::hook(0x571D9D, console_printfix_stub_02, HOOK_JUMP).install()->quick();
-		//utils::hook(0x52A01E, console_printfix_stub_03, HOOK_JUMP).install()->quick();
-		//utils::hook(0x4BA28A, console_printfix_stub_04, HOOK_JUMP).install()->quick();
 		utils::hook::nop(0x4BA29B, 5); // gamename
 		utils::hook::nop(0x4BA2AC, 5); // gamedate
 
@@ -367,6 +380,53 @@ public:
 
 		// disable atvi and codintro videos
 		utils::hook::nop(0x4F9602, 5);
+
+		#ifdef USING_CUSTOM_MASTER
+			// change MasterServer IP Address to our custom 
+			DWORD masterserver_patches [] =
+			{
+				0x465F64,
+				0x465FCF,
+				0x46CDDB,
+				0x4F977B,
+				0x4F97BE,
+				0x5242BB,
+				0x5242D4,
+				0x524341,
+				0x52E08E,
+				0x52E0A7,
+				0x52E0B6,
+				0x52E130,
+				0x52E184,
+				0x52E1FC
+			};
+
+			for (int i = 0; i < ARRAYSIZE(masterserver_patches); ++i)
+			{
+				utils::hook::set<const char*>(masterserver_patches[i] + 1, CUSTOM_MASTER_IP);
+			}
+
+			
+			//[client] change MasterServer port to our custom target
+			utils::hook::set<int>(0x46CE16, CUSTOM_MASTER_PORT);
+			//[server] change MasterServer port to our custom target for HeartBeat packet
+			utils::hook::set<int>(0x52E0E5, CUSTOM_MASTER_PORT);
+
+			DWORD masterserver_heartbeat_patches[] =
+			{
+				0x52DF7E,
+				0x52DFB8
+			};
+
+			for (int i = 0; i < ARRAYSIZE(masterserver_heartbeat_patches); ++i)
+			{
+				utils::hook::set<const char*>(masterserver_heartbeat_patches[i] + 1, "IW3 7");
+			}
+
+
+			utils::hook::set<const char*>(0x5452C6, "globalservers 1 IW3 7 full empty");
+			utils::hook::set<const char*>(0x5452D1, "globalservers 1 IW3 7 full empty");
+		#endif
 		
 
 		// make intro unskippable if in release

@@ -142,17 +142,6 @@ void localization::ClearTemp()
 
 void __stdcall localization::SetStringStub(const char* value, bool isEnglish)
 {
-	/*const char* key{};
-	uint32_t rand{};
-	__asm
-	{
-		mov rand, ecx
-		mov key, edi
-	}
-
-	localization::Set(key, "");*/
-
-	//	534747 8B CD                                   mov     ecx, ebp
 	const static uint32_t retn_addr = 0x53474E;
 	const static uint32_t block{};
 	__asm
@@ -229,25 +218,6 @@ void localization::post_load()
 	//utils::hook(0x534741, localization::SetStringStub, HOOK_CALL).install()->quick();
 
 	localization::UseLocalization = game::native::Dvar_RegisterBool("ui_localize", "Use localization strings", true, game::native::DVAR_FLAG_NONE);
-
-	// Generate localized entries for custom classes above 5
-	AssetHandler::OnLoad([](game::native::XAssetType type, game::native::XAssetHeader asset, const std::string& name, bool* /*restrict*/)
-	{
-		if (type != game::native::XAssetType::ASSET_TYPE_LOCALIZE_ENTRY) return;
-
-		if (name == "CLASS_SLOT1"s)
-		{
-			for (int i = 6; i <= NUM_CUSTOM_CLASSES; ++i)
-			{
-				std::string key = utils::string::va("CLASS_SLOT%i", i);
-
-				std::string value = asset.localize->value;
-				value = utils::string::replace(value, "1", utils::string::va("%i", i)); // Pretty ugly, but it should work
-
-				localization::Set(key, value);
-			}
-		}
-	});
 }
 
 void localization::pre_destroy()

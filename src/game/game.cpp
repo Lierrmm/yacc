@@ -87,6 +87,17 @@ namespace game
 			return Dvar_RegisterInt_r(dvar_name, dvar_type::DVAR_TYPE_INT, flags, description, default_value, 0, 0, 0, min_value, max_value);
 		}
 
+		inline dvar_t* Dvar_RegisterString(const char* dvar_name, const char* description, const char* default_value, std::uint16_t flags)
+		{
+			const auto dvar = game::native::Dvar_FindVar(dvar_name);
+			if (!dvar)
+			{
+				return Dvar_RegisterString_r(dvar_name, dvar_type::DVAR_TYPE_STRING, flags, description, default_value, 0, 0, 0, 0, 0);
+			}
+
+			return dvar;
+		}
+
 		/*inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
 			return Dvar_RegisterFloat_r(dvarName, defaultValue, minValue, maxValue, flags, description);
 		}*/
@@ -109,6 +120,44 @@ namespace game
 				call	Cbuf_AddText_func;
 			}
 		}
+
+		void sub_566160(const char* name, dvar_type _type, bool modified, DvarValue current, DvarValue latched)
+		{
+			const static uint32_t sub_566160_func = 0x566160;
+
+			/*
+			mov     eax, offset aCustomclass5; "customclass5"
+				.text:004F733F E8 EC 04 07 00                          call    SetFromStringByNameFromSource
+				.text : 004F7344 83 C4 08                                add     esp, 8
+				.text:004F7347 3B C3                                   cmp     eax, ebx
+				.text : 004F7349 74 30                                   jz      short loc_4F737B
+				.text : 004F734B 38 1D 8F EE 3F 01                       cmp     byte_13FEE8F, bl
+				.text : 004F7351 74 28                                   jz      short loc_4F737B
+				.text : 004F7353 8B 50 0C                                mov     edx, [eax + 0Ch]
+				.text : 004F7356 66 09 70 08 or [eax + 8], si
+				.text:004F735A 83 EC 10                                sub     esp, 10h
+				.text : 004F735D 8B CC                                   mov     ecx, esp
+				.text : 004F735F 89 11                                   mov[ecx], edx
+				.text : 004F7361 8B 50 10                                mov     edx, [eax + 10h]
+				.text : 004F7364 89 51 04                                mov[ecx + 4], edx
+				.text : 004F7367 8B 50 14                                mov     edx, [eax + 14h]
+				.text : 004F736A 89 51 08                                mov[ecx + 8], edx
+				.text:004F736D 8B 50 18                                mov     edx, [eax + 18h]
+				.text : 004F7370 89 51 0C                                mov[ecx + 0Ch], edx
+				.text : 004F7373 E8 E8 ED 06 00                          call    sub_56616
+			*/
+			__asm
+			{
+				push	latched;
+				push	current;
+				push	modified;
+				push	_type;
+				mov		eax, name;
+				call	sub_566160_func;
+			}
+		}
+
+		//sub_566160@<eax>(int a1@<eax>, int a2, float a3, float a4, float a5)
 
 		void Cmd_AddCommand(const char* name, void(*callback)(), cmd_function_s* data, char)
 		{

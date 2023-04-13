@@ -3655,6 +3655,7 @@ namespace game
 			temp = 0x100,
 			no_restart = 0x400, // do not clear when a cvar_restart is issued
 			user_created = 0x4000, // created by a set command
+			UNKNOWN = 0x8000
 		};
 
 		enum dvar_type : std::int8_t
@@ -3725,12 +3726,12 @@ namespace game
 			const char* name;
 			const char* description;
 			dvar_flags flags;
-			dvar_type type;
-			bool modified;
-			DvarValue current;
-			DvarValue latched;
-			DvarValue reset;
-			DvarLimits domain;
+			dvar_type type;    //12
+			bool modified;     //16
+			DvarValue current; //20
+			DvarValue latched; //24
+			DvarValue reset;   //28
+			DvarLimits domain; //32
 			bool (*domainFunc)(dvar_t*, DvarValue);
 			dvar_t* hashNext;
 		};
@@ -4788,5 +4789,11 @@ namespace game
 			char* keyword;
 			bool(*func)(menuDef_t* item, int handle);
 		} keywordHash_t;
+
+		enum msgLocErrType_t
+		{
+			LOCMSG_SAFE,
+			LOCMSG_NOERR,
+		};
 	}
 }

@@ -81,14 +81,17 @@ namespace game
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_enum, std::uint16_t flags, const char* description, std::int32_t default_index, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t enumSize, const char** enum_data)> Dvar_RegisterEnum_r{  0x5667F0 };
 		//WEAK symbol <dvar_t* (const char* dvar_name, float default_value, float min_value, float max_value, std::uint16_t flags, const char* description)> Dvar_RegisterFloat_r{  0x566B70 };
 		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_float2, std::uint16_t flags, const char* description, float x, float y, std::int32_t null1, std::int32_t null2, float min, float max)> Dvar_RegisterVec2_r{  0x5667F0 };
+		WEAK symbol <dvar_t* (const char* dvar_name, dvar_type type_string, std::uint16_t flags, const char* description, const char* default_value, std::int32_t null1, std::int32_t null2, std::int32_t null3, std::int32_t null4, std::int32_t null5)> Dvar_RegisterString_r{  0x5667F0 };
 
 		WEAK symbol <void(int, const char*, char)> Com_PrintMessage{  0x4F75E0 };
 		WEAK symbol <void(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation, const float* color, int style)> R_AddCmdDrawText{  0x5D6700 };
 		WEAK symbol <void()> Key_SetCatcher{  0x464A80 };
 		WEAK symbol <const char*()> Sys_DefaultInstallPath{  0x56D480 };
 		WEAK symbol <void(const char* map)> LoadMapLoadScreenInternal{  0x466C00 };
-		WEAK symbol <void(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{  0x567830 };
+		WEAK symbol <dvar_t*(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{  0x567830 };
 		WEAK symbol <bool(const char* address, netadr_t* adr)> NET_StringToAdr{ 0x503A80 };
+		WEAK symbol <const char* (const char* pszInputBuffer, const char* pszMessageType, msgLocErrType_t errType)> SEH_LocalizeTextMessage{ 0x533730 };
+		WEAK symbol <void(const char* var_name, const char* var_value)> Cvar_SetCommand{ 0x5678A0 };
 
 		WEAK symbol<const char* (const char* mode)> GetModeName {  0x53E3E0 };
 		WEAK symbol<const char* (const char* map)> GetMapName {  0x53E310 };

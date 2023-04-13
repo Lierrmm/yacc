@@ -11,6 +11,7 @@
 #include <game/dvars.hpp>
 #include "command.hpp"
 #include <utils/io.hpp>
+#include "localization.hpp"
 
 game::native::dvar_t* g_dump_scripts;
 game::native::dvar_t* g_dump_images;
@@ -172,7 +173,7 @@ public:
 
 	void post_load() override
 	{
-		utils::hook::set<const char*>(0x53DBBC, utils::string::va("YACC %s", SHORTVERSION));
+		utils::hook::set<const char*>(0x53DBBC, "");
 		utils::hook::set<const char*>(0x45C8F1, utils::string::va("YACC %s > ", VERSION));
 		utils::hook::set<DWORD>(0x45DE94, (DWORD)(YACC_BUILDSTRING));
 
@@ -289,7 +290,7 @@ public:
 
 	void post_unpack() override
 	{
-		
+		localization::Set("MPUI_WELCOME", "Welcome to the YACC COD4 ^3Alpha");
 	}
 };
 

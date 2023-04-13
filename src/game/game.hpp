@@ -10,9 +10,15 @@
 #define FF_LOAD_ADDON_MENU		true
 #define FF_ADDON_MENU_NAME		"yacc"
 
-#define NUM_CUSTOM_CLASSES 15
+#define NUM_CUSTOM_CLASSES 10
 
 #define BASEGAME "yacc"
+
+#define CUSTOM_MASTER_IP "150.230.121.10"
+//#define CUSTOM_MASTER_IP "192.168.50.100"
+#define CUSTOM_MASTER_PORT 20810
+
+#define USING_CUSTOM_MASTER // unset this to use default masterserver
 
 namespace game
 {
@@ -53,6 +59,8 @@ namespace game
 		//extern inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags);
 		extern inline dvar_t* Dvar_RegisterEnum(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t enum_size, const char** enum_data, std::uint16_t flags);
 		extern inline dvar_t* Dvar_RegisterVec2(const char* dvar_name, const char* description, float x, float y, float min_value, float max_value, std::uint16_t flags);
+		extern inline dvar_t* Dvar_RegisterString(const char* dvar_name, const char* description, const char* default_value, std::uint16_t flags);
+		
 		extern void Cbuf_AddText(const char* text /*eax*/, int local_client_num /*ecx*/);
 		extern void Cmd_AddCommand(const char* name, void(*callback)(), cmd_function_s* data, char);
 		extern void Cmd_AddCommand(const char* name, const char* args, const char* description, void(*callback)(), cmd_function_s* data, char);
@@ -71,6 +79,8 @@ namespace game
 		extern void Menus_OpenByName(const char* menu_name, game::native::UiContext* ui_dc);
 		extern void Menus_CloseByName(const char* menu_name, game::native::UiContext* ui_dc);
 		extern void Menus_CloseAll(game::native::UiContext* ui_dc);
+
+		extern void sub_566160(const char* name, dvar_type type, bool modified, DvarValue current, DvarValue latched);
 
 		extern const char* UI_SafeTranslateString(const char* name);
 
