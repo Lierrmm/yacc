@@ -403,7 +403,7 @@ public:
 		// These handle connecting to server 
 		//utils::hook::nop(0x544BD1, 5);
 		//utils::hook::nop(0x544F58, 5);
-		utils::hook::nop(0x544F84, 5);
+		//utils::hook::nop(0x544F84, 5);
 		utils::hook::nop(0x544FF0, 5);   // MODNAME
 
 		// Set UI_SHOWLIST font to normalFont so it's actually readable...

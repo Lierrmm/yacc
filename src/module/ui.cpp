@@ -309,6 +309,21 @@ public:
 			/* desc		*/ "menu helper",
 			/* default	*/ false,
 			/* flags	*/ game::native::dvar_flags::read_only);
+
+		command::add("ui_debugmode", "<boolean>", "Draw ui debug info on the screen", [](command::params params)
+		{
+			if (params.length() < 2)
+			{
+				game::native::Com_PrintMessage(0, "Usage :: ui_debugmode <boolean>\n", 0);
+				return;
+			}
+
+			bool uiDebugValue;
+
+			std::istringstream(params[1]) >> uiDebugValue;
+
+			utils::hook::set<bool>(0xD5E44CC, uiDebugValue);
+		});
 	}
 
 	void post_unpack() override
