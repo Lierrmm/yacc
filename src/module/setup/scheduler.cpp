@@ -1,7 +1,7 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
-#include "game_console.hpp"
+#include <module/addons/game_console.hpp>
 
 #include "scheduler.hpp"
 

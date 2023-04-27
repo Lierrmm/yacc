@@ -2,7 +2,7 @@
 #include <loader/module_loader.hpp>
 #include <game/game.hpp>
 
-#include "console.hpp"
+#include <module/setup/console.hpp>
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <utils/memory.hpp>

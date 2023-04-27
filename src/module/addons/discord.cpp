@@ -2,9 +2,9 @@
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
 
-#include "console.hpp"
-#include "network.hpp"
-#include "scheduler.hpp"
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
+#include <module/networking/network.hpp>
 
 #include <utils/string.hpp>
 #include <utils/cryptography.hpp>

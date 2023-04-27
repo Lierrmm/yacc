@@ -2,7 +2,7 @@
 #include "loader/module_loader.hpp"
 #include <game/game.hpp>
 
-#include "command.hpp"
+#include <module/gameplay/command.hpp>
 #include "console.hpp"
 #include "filesystem.hpp"
 

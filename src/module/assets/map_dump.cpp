@@ -1,14 +1,14 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
-#include "console.hpp"
-#include "scheduler.hpp"
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
 
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <utils/io.hpp>
-#include "command.hpp"
+#include <module/gameplay/command.hpp>
 
 class MapDumper
 {

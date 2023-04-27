@@ -1,9 +1,6 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
-
-#include "console.hpp"
-
 #include <utils/hook.hpp>
 
 class fov final : public module

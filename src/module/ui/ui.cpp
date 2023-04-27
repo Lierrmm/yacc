@@ -1,18 +1,18 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
 #include "game/game.hpp"
-#include "console.hpp"
-#include "scheduler.hpp"
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
 #include "version.hpp"
 
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <game/dvars.hpp>
-#include "command.hpp"
+#include <module/gameplay/command.hpp>
 #include <utils/io.hpp>
-#include "localization.hpp"
-#include "asset_handler.hpp"
+#include <module/assets/localization.hpp>
+#include <module/assets/asset_handler.hpp>
 
 game::native::dvar_t* g_dump_scripts;
 game::native::dvar_t* g_dump_images;

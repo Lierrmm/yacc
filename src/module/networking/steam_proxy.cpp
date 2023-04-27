@@ -7,7 +7,7 @@
 #include "steam/interface.hpp"
 
 #include "game/game.hpp"
-#include "scheduler.hpp"
+#include <module/setup/scheduler.hpp>
 
 class steam_proxy final : public module
 {

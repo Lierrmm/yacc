@@ -2,10 +2,10 @@
 #include "loader/module_loader.hpp"
 #include "game/game.hpp"
 
-#include "module/command.hpp"
-#include "module/game_module.hpp"
-#include "module/console.hpp"
-#include "module/scheduler.hpp"
+#include <module/gameplay/command.hpp>
+#include <module/setup/game_module.hpp>
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
 
 #include <sol/sol.hpp>
 #include <utils/io.hpp>

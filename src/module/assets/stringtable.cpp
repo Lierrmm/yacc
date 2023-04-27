@@ -3,7 +3,7 @@
 #include <game/game.hpp>
 
 #include "stringtable.hpp"
-#include "console.hpp"
+#include <module/setup/console.hpp>
 
 #include <utils/string.hpp>
 #include <utils/memory.hpp>

@@ -9,15 +9,15 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#include "console.hpp"
-#include "scheduler.hpp"
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
 
 #include <utils/concurrency.hpp>
 #include <utils/_utils.hpp>
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-#include "_ui.hpp"
+#include <module/ui/_ui.hpp>
 #include <version.h>
 #include "game_console.hpp"
 

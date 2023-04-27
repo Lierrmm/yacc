@@ -2,7 +2,7 @@
 #include <loader/module_loader.hpp>
 
 #include "game/game.hpp"
-#include <module/command.hpp>
+#include <module/gameplay/command.hpp>
 
 #include "menu_export.hpp"
 

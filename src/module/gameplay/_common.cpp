@@ -4,11 +4,10 @@
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include "console.hpp"
+#include <module/setup/console.hpp>
+#include <module/setup/scheduler.hpp>
 #include <utils/io.hpp>
 #include "command.hpp"
-#include "scheduler.hpp"
-
 
 void register_additional_dvars()
 {

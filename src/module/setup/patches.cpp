@@ -6,9 +6,10 @@
 #include "console.hpp"
 #include "scheduler.hpp"
 #include "version.hpp"
-#include "command.hpp"
-#include "localization.hpp"
-#include "ui_script.hpp"
+
+#include <module/gameplay/command.hpp>
+#include <module/assets/localization.hpp>
+#include <module/assets/ui_script.hpp>
 
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
