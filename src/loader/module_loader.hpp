@@ -46,12 +46,14 @@ public:
 	static void pre_destroy();
 	static void sort();
 	static void* load_import(const std::string& module, const std::string& function);
-
+	static void uninitialize();
 	static void trigger_premature_shutdown();
+	static bool is_uninitializing();
 
 private:
 	//static std::vector<std::unique_ptr<module>>* modules_;
 	static std::vector<std::unique_ptr<module>>& get_components();
+	static bool uninitializing;
 };
 
 #define REGISTER_MODULE(name)                       \

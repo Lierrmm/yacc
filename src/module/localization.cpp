@@ -217,7 +217,7 @@ void localization::post_load()
 	// Overwrite SetString
 	//utils::hook(0x534741, localization::SetStringStub, HOOK_CALL).install()->quick();
 
-	localization::UseLocalization = game::native::Dvar_RegisterBool("ui_localize", "Use localization strings", true, game::native::DVAR_FLAG_NONE);
+	localization::UseLocalization = game::native::Dvar_RegisterBool("ui_localize", "Use localization strings", true, game::native::dvar_flags::dvar_none);
 }
 
 void localization::pre_destroy()

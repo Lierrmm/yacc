@@ -750,7 +750,7 @@ IDirect3D9* __stdcall D3D9Ex::Direct3DCreate9Stub(UINT sdk)
 
 void D3D9Ex::post_load()
 {
-	game::native::Dvar_RegisterBool("r_useD3D9Ex", "Use extended d3d9 interface", false, game::native::DVAR_FLAG_SAVED);
+	game::native::Dvar_RegisterBool("r_useD3D9Ex", "Use extended d3d9 interface", false, game::native::dvar_flags::saved);
 
 	// Hook Interface creation
 	utils::hook::set(0x68942C, D3D9Ex::Direct3DCreate9Stub);

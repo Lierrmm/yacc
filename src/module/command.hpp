@@ -10,6 +10,7 @@ public:
 		params(DWORD id) : command_id(id) {};
 		params(const params& obj) { this->command_id = obj.command_id; };
 		params() : params(game::native::cmd_args->nesting) {};
+		virtual std::string join(int index);
 
 		const char* operator[](size_t index);
 		size_t length();

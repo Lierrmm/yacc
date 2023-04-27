@@ -4,6 +4,10 @@
 std::mutex window::mutex_;
 std::vector<window*> window::windows_;
 
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+
 window::window()
 {
 	ZeroMemory(&this->wc_, sizeof(this->wc_));
@@ -34,6 +38,9 @@ void window::create(const std::string& title, const int width, const int height,
 
 	this->handle_ = CreateWindowExA(NULL, this->wc_.lpszClassName, title.data(), flags, x, y, width, height, nullptr,
 	                                nullptr, this->wc_.hInstance, this);
+
+	BOOL value = TRUE;
+	DwmSetWindowAttribute(this->handle_, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
 	SendMessageA(this->handle_, WM_DPICHANGED, 0, 0);
 }

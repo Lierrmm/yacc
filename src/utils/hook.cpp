@@ -256,4 +256,16 @@ namespace utils
 	{
 		nop(reinterpret_cast<void*>(place), length);
 	}
+
+	void hook::RedirectJump(void* place, void* stub)
+	{
+		char* operandPtr = static_cast<char*>(place) + 2;
+		int newOperand = reinterpret_cast<int>(stub) - (reinterpret_cast<int>(place) + 6);
+		utils::hook::set<int>(operandPtr, newOperand);
+	}
+
+	void hook::RedirectJump(DWORD place, void* stub)
+	{
+		hook::RedirectJump(reinterpret_cast<void*>(place), stub);
+	}
 }

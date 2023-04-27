@@ -80,12 +80,15 @@
 #include <tomcrypt.h>
 
 #include <gsl/gsl>
-
+#include <json11.hpp>
 #include <udis86.h>
+#include <dwmapi.h>
+#include <imgui.h>
 
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "d3d9.lib")
+#pragma comment (lib, "dwmapi.lib")
 
 #pragma warning(pop)
 

@@ -8,6 +8,7 @@ namespace game
 		typedef vec_t vec2_t[2];
 		typedef vec_t vec3_t[3];
 		typedef vec_t vec4_t[4];
+		typedef unsigned __int16 scr_string_t;
 		typedef unsigned __int16 ScriptString;
 
 		struct cmd_function_s
@@ -461,22 +462,211 @@ namespace game
 			struct Glyph* glyphs;// Offset=0x14 Size=0x4
 		};
 
-		struct ScreenPlacement// Size=0x6c
+		struct ScreenPlacement
 		{
-			vec2_t scaleVirtualToReal;// Offset=0x0 Size=0x8
-			vec2_t scaleVirtualToFull;// Offset=0x8 Size=0x8
-			vec2_t scaleRealToVirtual;// Offset=0x10 Size=0x8
-			vec2_t realViewportPosition;// Offset=0x18 Size=0x8
-			vec2_t realViewportSize;// Offset=0x20 Size=0x8
-			vec2_t virtualViewableMin;// Offset=0x28 Size=0x8
-			vec2_t virtualViewableMax;// Offset=0x30 Size=0x8
-			vec2_t realViewableMin;// Offset=0x38 Size=0x8
-			vec2_t realViewableMax;// Offset=0x40 Size=0x8
-			vec2_t virtualAdjustableMin;// Offset=0x48 Size=0x8
-			vec2_t virtualAdjustableMax;// Offset=0x50 Size=0x8
-			vec2_t realAdjustableMin;// Offset=0x58 Size=0x8
-			vec2_t realAdjustableMax;// Offset=0x60 Size=0x8
-			vec_t subScreenLeft;// Offset=0x68 Size=0x4
+			float scaleVirtualToReal[2];
+			float scaleVirtualToFull[2];
+			float scaleRealToVirtual[2];
+			float virtualViewableMin[2];
+			float virtualViewableMax[2];
+			float realViewportSize[2];
+			float realViewableMin[2];
+			float realViewableMax[2];
+			float subScreenLeft;
+		};
+
+		struct Message
+		{
+			int startTime;
+			int endTime;
+		};
+
+		struct MessageLine
+		{
+			int messageIndex;
+			int textBufPos;
+			int textBufSize;
+			int typingStartTime;
+			int lastTypingSoundTime;
+			int flags;
+		};
+
+		struct MessageWindow
+		{
+			MessageLine* lines;
+			Message* messages;
+			char* circularTextBuffer;
+			int textBufSize;
+			int lineCount;
+			int padding;
+			int scrollTime;
+			int fadeIn;
+			int fadeOut;
+			int textBufPos;
+			int firstLineIndex;
+			int activeLineCount;
+			int messageIndex;
+		};
+
+		struct MessageBuffer
+		{
+			char gamemsgText[4][2048];
+			MessageWindow gamemsgWindows[4];
+			MessageLine gamemsgLines[4][12];
+			Message gamemsgMessages[4][12];
+			char miniconText[4096];
+			MessageWindow miniconWindow;
+			MessageLine miniconLines[100];
+			Message miniconMessages[100];
+			char errorText[1024];
+			MessageWindow errorWindow;
+			MessageLine errorLines[5];
+			Message errorMessages[5];
+		};
+
+		struct field_t
+		{
+			int cursor;
+			int scroll;
+			int drawWidth;
+			int widthInPixels;
+			float charHeight;
+			int fixedSize;
+			char buffer[256];
+		};
+
+		struct Console
+		{
+			int initialized;
+			MessageWindow consoleWindow;
+			MessageLine consoleLines[1024];
+			Message consoleMessages[1024];
+			char consoleText[32768];
+			char textTempLine[512];
+			unsigned int lineOffset;
+			int displayLineOffset;
+			int prevChannel;
+			bool outputVisible;
+			int fontHeight;
+			int visibleLineCount;
+			int visiblePixelWidth;
+			float screenMin[2];
+			float screenMax[2];
+			MessageBuffer messageBuffer[1];
+			float color[4];
+		};
+
+		struct conAddons_CursorPos
+		{
+			float x;
+			float y;
+		};
+
+		struct fltCon_Dimensions
+		{
+			float width;
+			float height;
+		};
+
+		struct fltCon_Anker
+		{
+			float left;
+			float top;
+			float right;
+			float bottom;
+		};
+
+		struct fltCon_borderClip
+		{
+			bool left;
+			bool top;
+			bool right;
+			bool bottom;
+		};
+
+		struct fltCon_s
+		{
+			bool				initialized;
+			bool				enabled;
+			bool				is_moving;
+			bool				was_in_use;
+			bool				was_reset;
+			bool				is_resizing;
+			fltCon_borderClip	clipped_at_border;
+			fltCon_Anker		anker;
+			fltCon_Dimensions	dimensions;
+			fltCon_Dimensions	min_dimensions;
+		};
+
+		struct conItem_slider
+		{
+			float x;
+			float y;
+			float w;
+			float h;
+			float padding;
+		};
+
+		struct conItem_text
+		{
+			float x;
+			float y;
+			float h;
+		};
+
+		struct conItem_box
+		{
+			float x;
+			float y;
+			float w;
+			float h;
+		};
+
+		struct conItems_conType
+		{
+			conItem_box			input_box;
+			conItem_box			output_box;
+			conItem_text		output_text;
+			conItem_slider		output_slider;
+			conItem_box			hint_box_upper;
+			conItem_text		hint_box_upper_text;
+			conItem_box			hint_box_lower;
+			conItem_text		hint_box_lower_text;
+			conItem_box			hint_box_total;
+			conItem_box			resize_button_trigger;
+		};
+
+		struct conItems_s
+		{
+			conItems_conType	s_con;
+			conItems_conType	f_con;
+		};
+
+		struct Console_Addons
+		{
+			fltCon_s			floating;
+			conItems_s			items;
+			conAddons_CursorPos	cursor_pos;
+			conAddons_CursorPos	cursor_pos_saved;
+			conAddons_CursorPos	cursor_pos_saved_on_click;
+			fltCon_Dimensions	viewport_res;
+			bool				fcon_first_frame;
+			int					cursor_toggle_timeout;
+		};
+
+		struct ConDrawInputGlob
+		{
+			char autoCompleteChoice[64];
+			int matchIndex;
+			int matchCount;
+			const char* inputText;
+			int inputTextLen;
+			bool hasExactMatch;
+			bool mayAutoComplete;
+			float x;
+			float y;
+			float leftX;
+			float fontHeight;
 		};
 
 		struct cursor_t
@@ -706,7 +896,7 @@ namespace game
 			ItemKeyHandler* onKey;
 			const char* enableDvar;
 			int dvarFlags;
-			void* focusSound;
+			snd_alias_list_t* focusSound;
 			int feeder; //float feeder; //original name: special
 			int cursorPos[1];
 			itemDefData_t typeData;
@@ -2481,10 +2671,27 @@ namespace game
 			NA_DOWN = 10,
 		};
 
+		enum netsrc_t
+		{
+			NS_CLIENT1 = 0,
+			NS_CLIENT2 = 1,
+			NS_CLIENT3 = 2,
+			NS_CLIENT4 = 3,
+			NS_SERVER = 4,
+			NS_MAXCLIENTS = 4,
+			NS_PACKET = 5
+		};
+
+		typedef union
+		{
+			unsigned char bytes[4];
+			DWORD full;
+		} netIP_t;
+
 		struct netadr_t
 		{
 			netadrtype_t type;
-			unsigned char ip[4];
+			netIP_t ip;
 			unsigned __int16 port;
 			char ipx[10];
 		};
@@ -3710,7 +3917,7 @@ namespace game
 			} vector;
 		};
 
-		enum DvarFlags : std::uint32_t
+		/*enum DvarFlags : std::uint32_t
 		{
 			DVAR_FLAG_NONE = 0,
 			DVAR_FLAG_SAVED = 0x1,
@@ -3719,7 +3926,7 @@ namespace game
 			DVAR_FLAG_REPLICATED = 0x8,
 			DVAR_FLAG_WRITE = 0x800,
 			DVAR_FLAG_READ = 0x2000,
-		};
+		};*/
 
 		struct dvar_t
 		{
@@ -4289,6 +4496,102 @@ namespace game
 			int totalVectorRefCount;
 		}scrVarPub_t;
 
+		union ObjectInfo_unnamed_9909
+		{
+			unsigned short size;
+			unsigned short entnum;
+			unsigned short nextEntId;
+			unsigned short self;
+		};
+
+		struct ObjectInfo
+		{
+			unsigned short refCount;
+			ObjectInfo_unnamed_9909 u;
+		};
+
+		union VariableValueInternal_unnamed_9905
+		{
+			unsigned short next;
+			VariableUnion u;
+			ObjectInfo o;
+		};
+
+		union VariableValueInternal_unnamed_9906
+		{
+			unsigned int status;
+			unsigned int type;
+			unsigned int name;
+			unsigned int classnum;
+			unsigned int notifyName;
+			unsigned int waitTime;
+			unsigned int parentLocalId;
+		};
+
+		union VariableValueInternal_unnamed_9907
+		{
+			unsigned short next;
+			unsigned short index;
+		};
+
+		union Variable_unnamed_9903
+		{
+			unsigned short prev;
+			unsigned short prevSibling;
+		};
+
+		struct Variable
+		{
+			unsigned short id;
+			Variable_unnamed_9903 u;
+		};
+
+
+		struct VariableValueInternal
+		{
+			Variable hash;
+			VariableValueInternal_unnamed_9905 u;
+			VariableValueInternal_unnamed_9906 w;
+			VariableValueInternal_unnamed_9907 v;
+			unsigned short nextSibling;
+		};
+
+		struct scrVarGlob_t
+		{
+			VariableValueInternal variableList[90110];
+		};
+
+		struct scr_entref_t
+		{
+			unsigned short entnum;
+			unsigned short classnum;
+		};
+
+		struct scr_classStruct_t
+		{
+			uint16_t id;
+			uint16_t entArrayId;
+			char charId;
+			const char* name;
+		};
+
+		typedef void(__cdecl* BuiltinFunction)();
+		typedef void(__cdecl* BuiltinMethod)(scr_entref_t);
+
+		struct BuiltinFunctionDef
+		{
+			const char* actionString;
+			BuiltinFunction actionFunc;
+			int type;
+		};
+
+		struct BuiltinMethodDef
+		{
+			const char* actionString;
+			BuiltinMethod actionFunc;
+			int type;
+		};
+
 		enum GfxRenderTargetId
 		{
 			R_RENDERTARGET_SAVED_SCREEN = 0x0,
@@ -4794,6 +5097,231 @@ namespace game
 		{
 			LOCMSG_SAFE,
 			LOCMSG_NOERR,
+		};
+
+		struct netProfilePacket_t// Size=0xc (Id=8935)
+		{
+			int iTime;// Offset=0x0 Size=0x4
+			int iSize;// Offset=0x4 Size=0x4
+			int bFragment;// Offset=0x8 Size=0x4
+		};
+
+		struct netProfileStream_t// Size=0x2f0 (Id=8929)
+		{
+			netProfilePacket_t packets[60];// Offset=0x0 Size=0x2d0
+			int iCurrPacket;// Offset=0x2d0 Size=0x4
+			int iBytesPerSecond;// Offset=0x2d4 Size=0x4
+			int iLastBPSCalcTime;// Offset=0x2d8 Size=0x4
+			int iCountedPackets;// Offset=0x2dc Size=0x4
+			int iCountedFragments;// Offset=0x2e0 Size=0x4
+			int iFragmentPercentage;// Offset=0x2e4 Size=0x4
+			int iLargestPacket;// Offset=0x2e8 Size=0x4
+			int iSmallestPacket;// Offset=0x2ec Size=0x4
+		};
+
+		struct netProfileInfo_t// Size=0x5e0 (Id=8982)
+		{
+			netProfileStream_t send;// Offset=0x0 Size=0x2f0
+			netProfileStream_t recieve;// Offset=0x2f0 Size=0x2f0
+		};
+
+		struct netchan_t
+		{
+			int outgoingSequence;
+			netsrc_t sock;
+			int dropped;
+			int incomingSequence;
+			netadr_t remoteAddress;
+			int qport;
+			int fragmentSequence;
+			int fragmentLength;
+			char* fragmentBuffer;
+			int fragmentBufferSize;
+			int unsentFragments;
+			int unsentFragmentStart;
+			int unsentLength;
+			char* unsentBuffer;
+			int unsentBufferSize;
+			netProfileInfo_t prof;
+		};
+
+		struct msg_t// Size=0x28 (Id=9331)
+		{
+			int overflowed;// Offset=0x0 Size=0x4
+			int readOnly;// Offset=0x4 Size=0x4
+			char* data;// Offset=0x8 Size=0x4
+			char* splitData;// Offset=0xc Size=0x4
+			int maxsize;// Offset=0x10 Size=0x4
+			int cursize;// Offset=0x14 Size=0x4
+			int splitSize;// Offset=0x18 Size=0x4
+			int readcount;// Offset=0x1c Size=0x4
+			int bit;// Offset=0x20 Size=0x4
+			int lastEntityRef;// Offset=0x24 Size=0x4
+		};
+
+		struct clientHeader_t
+		{
+			int state;
+			int sendAsActive;
+			int deltaMessage;
+			int rateDelayed;
+			netchan_t netchan;
+			float predictedOrigin[3];
+			int predictedOriginServerTime;
+		};
+
+		struct svscmd_info_t
+		{
+			char cmd[1024];
+			int time;
+			int type;
+		};
+
+		struct clientSnapshot_t
+		{
+			playerState_s ps;
+			int num_entities;
+			int num_clients;
+			int first_entity;
+			int first_client;
+			int messageSent;
+			int messageAcked;
+			int messageSize;
+			int serverTime;
+		};
+
+		struct __declspec() VoicePacket_t
+		{
+			char talker;
+			char data[256];
+			int dataSize;
+		};
+
+		struct clientConnection_t
+		{
+			int qport;
+			int clientNum;
+			int lastPacketSentTime;
+			int lastPacketTime;
+			netadr_t serverAddress;
+			int connectTime;
+			int connectPacketCount;
+			char serverMessage[256];
+			int challenge;
+			int checksumFeed;
+			int reliableSequence;
+			int reliableAcknowledge;
+			char reliableCommands[128][1024];
+			int serverMessageSequence;
+			int serverCommandSequence;
+			int lastExecutedServerCommand;
+			char serverCommands[128][1024];
+			bool isServerRestarting;
+			int lastClientArchiveIndex;
+			char demoName[64];
+			int demorecording;
+			int demoplaying;
+			int isTimeDemo;
+			int demowaiting;
+			int firstDemoFrameSkipped;
+			int demofile;
+			int timeDemoLog;
+			int timeDemoFrames;
+			int timeDemoStart;
+			int timeDemoPrev;
+			int timeDemoBaseTime;
+			netchan_t netchan;
+			char netchanOutgoingBuffer[2048];
+			char netchanIncomingBuffer[131072];
+			netProfileInfo_t OOBProf;
+			char statPacketsToSend;
+			int statPacketSendTime[7];
+		};
+
+		struct __declspec() client_t
+		{
+			clientHeader_t header;
+			const char* dropReason;
+			char userinfo[1024];
+			svscmd_info_t reliableCommandInfo[128];
+			int reliableSequence;
+			int reliableAcknowledge;
+			int reliableSent;
+			int messageAcknowledge;
+			int gamestateMessageNum;
+			int challenge;
+			usercmd_s lastUsercmd;
+			int lastClientCommand;
+			char lastClientCommandString[1024];
+			gentity_s* gentity;
+			char name[16];
+			int downloading;
+			char downloadName[64];
+			int download;
+			int downloadSize;
+			int downloadCount;
+			int downloadClientBlock;
+			int downloadCurrentBlock;
+			int downloadXmitBlock;
+			char* downloadBlocks[8];
+			int downloadBlockSize[8];
+			int downloadEOF;
+			int downloadSendTime;
+			char downloadURL[256];
+			int wwwOk;
+			int downloadingWWW;
+			int clientDownloadingWWW;
+			int wwwFallback;
+			int nextReliableTime;
+			int lastPacketTime;
+			int lastConnectTime;
+			int nextSnapshotTime;
+			int timeoutCount;
+			clientSnapshot_t frames[32];
+			int ping;
+			int rate;
+			int snapshotMsec;
+			int snapshotBackoffCount;
+			int pureAuthentic;
+			char netchanOutgoingBuffer[131072];
+			char netchanIncomingBuffer[2048];
+			char cdkeyHash[33];
+			unsigned __int16 scriptId;
+			int bIsTestClient;
+			int serverId;
+			VoicePacket_t voicePackets[40];
+			int voicePacketCount;
+			bool muteList[64];
+			bool sendVoice;
+			char stats[8192];
+			char statPacketsReceived;
+			bool tempPacketDebugging;
+		};
+
+		struct XNKID
+		{
+			unsigned char ab[8];
+		};
+
+		struct XNKEY
+		{
+			unsigned char ab[16];
+		};
+
+		struct XNADDR
+		{
+			in_addr ina;
+			in_addr inaOnline;
+			unsigned short wPortOnline;
+			unsigned char abEnet[6];
+			unsigned char abOnline[20];
+		};
+
+		struct _XSESSION_INFO
+		{
+			XNKID sessionID;
+			XNADDR hostAddress;
+			XNKEY keyExchangeKey;
 		};
 	}
 }

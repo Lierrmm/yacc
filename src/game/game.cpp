@@ -25,6 +25,27 @@ namespace game
 {
 	namespace native
 	{
+		ConDrawInputGlob* conDrawInputGlob = reinterpret_cast<ConDrawInputGlob*>(0x8C42C8);
+		Console* con = reinterpret_cast<Console*>(0x8D48C0);
+		field_t* g_consoleField = reinterpret_cast<field_t*>(0x8E9B88);
+		bool* Key_IsCatcherActive = reinterpret_cast<bool*>(0xC578F8);
+
+		float* con_matchtxtColor_currentDvar = reinterpret_cast<float*>(0x6B5F24);
+		float* con_matchtxtColor_currentValue = reinterpret_cast<float*>(0x6B5F34);
+		float* con_matchtxtColor_defaultValue = reinterpret_cast<float*>(0x6B5F44);
+		float* con_matchtxtColor_dvarDescription = reinterpret_cast<float*>(0x6B5F64);
+		float* con_matchtxtColor_domainDescription = reinterpret_cast<float*>(0x6B5F54);
+
+		bool* extvar_con_ignoreMatchPrefixOnly = reinterpret_cast<bool*>(0x72EBB1);
+
+		ScreenPlacement* scrPlace = reinterpret_cast<ScreenPlacement*>(0xE2C420);
+		ScreenPlacement* scrPlaceFull = reinterpret_cast<ScreenPlacement*>(0xE2C3D8);
+
+		PlayerKeyState* playerKeys = reinterpret_cast<PlayerKeyState*>(0x8E9DB8);
+		clientUIActive_t* clientUI = reinterpret_cast<clientUIActive_t*>(0xC578F4);
+
+		ConDrawInput_DvarMatch_t	ConDrawInput_DvarMatch = (ConDrawInput_DvarMatch_t)0x45BD90;
+
 		vec4_t colorWhite = { 1, 1, 1, 1 };
 
 		decltype(longjmp)* _longjmp;
@@ -78,6 +99,102 @@ namespace game
 			}
 		}
 
+		char* Com_Parse(const char** data_p)
+		{
+			const static uint32_t ComParse_func = 0x56BB10;
+
+			static char* returned{};
+			__asm
+			{
+				mov edi, data_p;
+				Call ComParse_func;
+				mov returned, eax;
+			}
+
+			return returned;
+		}
+
+		void Dvar_ForEachName(void(__cdecl* func)(const char*))
+		{
+			const static uint32_t Dvar_ForEachName_func = 0x5643B0;
+			__asm
+			{
+				pushad;
+				mov		edi, [func];
+				call	Dvar_ForEachName_func;
+				popad;
+			}
+		}
+
+		void Cmd_ForEachXO(void(__cdecl* callback)(const char*))
+		{
+			// skip the first cmd (nullptr)?
+			auto derefed = *cmd_ptr;
+			for (auto cmd = derefed->next; cmd; cmd = cmd->next)
+			{
+				if (cmd->name)
+				{
+					callback(cmd->name);
+				}
+			}
+		}
+
+		void Cmd_ForEach_PassCmd(void(__cdecl* callback)(cmd_function_s*))
+		{
+			// skip the first cmd (nullptr)?
+			auto derefed = *cmd_ptr;
+			for (auto cmd = derefed->next; cmd; cmd = cmd->next)
+			{
+				if (cmd->name)
+				{
+					callback(cmd);
+				}
+			}
+		}
+
+		char* Cmd_Argv(int arg_index)
+		{
+			const static uint32_t Cmd_Argv_func = 0x428EE0;
+			__asm
+			{
+				mov		eax, arg_index;
+				call	Cmd_Argv_func;
+			}
+		}
+
+		void Con_DrawAutoCompleteChoice(int is_dvar_cmd, char* text)
+		{
+			Con_DrawAutoCompleteChoice_func(is_dvar_cmd, text);
+		}
+
+		void Con_DrawMessageWindowOldToNew(DWORD* msg_window /*esi*/, int local_client_num, int x_pos, int y_pos, int char_height, int horz_align, int vert_align, int mode, Font_s* font, const float* color, int text_style, float msgwnd_scale, int text_align_mode)
+		{
+			const static uint32_t Con_DrawMessageWindowOldToNew_func = 0x45D460;
+			__asm
+			{
+				push	text_align_mode;
+				push	0;
+
+				fld		msgwnd_scale;
+				fstp	dword ptr[esp];
+
+				push	text_style;
+				push	color;
+				push	font;
+				push	mode;
+				push	vert_align;
+				push	horz_align;
+				push	char_height;
+				push	y_pos;
+				push	x_pos;
+				push	local_client_num;
+				mov		esi, msg_window;
+
+				call	Con_DrawMessageWindowOldToNew_func;
+				add     esp, 30h;
+			}
+		}
+
 		// custom functions
 		inline dvar_t* Dvar_RegisterBool(const char* dvar_name, const char* description, std::int32_t default_value, std::uint16_t flags) {
 			return Dvar_RegisterBool_r(dvar_name, dvar_type::DVAR_TYPE_BOOL, flags, description, default_value, 0, 0, 0, 0, 0);
@@ -98,12 +215,37 @@ namespace game
 			return dvar;
 		}
 
-		/*inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
-			return Dvar_RegisterFloat_r(dvarName, defaultValue, minValue, maxValue, flags, description);
-		}*/
+		dvar_t* Cvar_RegisterFloat(const char* name, float val, float min, float max, unsigned short flags, const char* description)
+		{
+
+			dvar_t* cvar;
+			DvarLimits limits;
+			DvarValue value;
+
+			limits.value.min = min;
+			limits.value.max = max;
+
+			value.value = val;
+
+			cvar = Cvar_Register(name, DVAR_TYPE_FLOAT, flags, value, limits, description);
+
+			return cvar;
+		}
+
+		inline dvar_t* Dvar_RegisterFloat(const char* dvarName, const char* description, float defaultValue, float minValue, float maxValue, std::uint16_t flags) {
+			return Dvar_RegisterFloat_r(dvarName, dvar_type::DVAR_TYPE_FLOAT, flags, description, defaultValue, 0, 0, 0, minValue, maxValue);
+		}
 
 		inline dvar_t* Dvar_RegisterVec2(const char* dvar_name, const char* description, float x, float y, float min_value, float max_value, std::uint16_t flags) {
 			return Dvar_RegisterVec2_r(dvar_name, dvar_type::DVAR_TYPE_FLOAT_2, flags, description, x, y, 0, 0, min_value, max_value);
+		}
+
+		inline dvar_t* Dvar_RegisterVec3(const char* dvar_name, const char* description, float x, float y, float z, float min_value, float max_value, std::uint16_t flags) {
+			return Dvar_RegisterVec3_r(dvar_name, dvar_type::DVAR_TYPE_FLOAT_3, flags, description, x, y, z, 0, min_value, max_value);
+		}
+
+		inline dvar_t* Dvar_RegisterVec4(const char* dvar_name, const char* description, float x, float y, float z, float w, float min_value, float max_value, std::uint16_t flags) {
+			return Dvar_RegisterVec4_r(dvar_name, dvar_type::DVAR_TYPE_FLOAT_4, flags, description, x, y, z, w, min_value, max_value);
 		}
 
 		inline dvar_t* Dvar_RegisterEnum(const char* dvar_name, const char* description, std::int32_t default_value, std::int32_t enum_size, const char** enum_data, std::uint16_t flags) {
@@ -120,44 +262,6 @@ namespace game
 				call	Cbuf_AddText_func;
 			}
 		}
-
-		void sub_566160(const char* name, dvar_type _type, bool modified, DvarValue current, DvarValue latched)
-		{
-			const static uint32_t sub_566160_func = 0x566160;
-
-			/*
-			mov     eax, offset aCustomclass5; "customclass5"
-				.text:004F733F E8 EC 04 07 00                          call    SetFromStringByNameFromSource
-				.text : 004F7344 83 C4 08                                add     esp, 8
-				.text:004F7347 3B C3                                   cmp     eax, ebx
-				.text : 004F7349 74 30                                   jz      short loc_4F737B
-				.text : 004F734B 38 1D 8F EE 3F 01                       cmp     byte_13FEE8F, bl
-				.text : 004F7351 74 28                                   jz      short loc_4F737B
-				.text : 004F7353 8B 50 0C                                mov     edx, [eax + 0Ch]
-				.text : 004F7356 66 09 70 08 or [eax + 8], si
-				.text:004F735A 83 EC 10                                sub     esp, 10h
-				.text : 004F735D 8B CC                                   mov     ecx, esp
-				.text : 004F735F 89 11                                   mov[ecx], edx
-				.text : 004F7361 8B 50 10                                mov     edx, [eax + 10h]
-				.text : 004F7364 89 51 04                                mov[ecx + 4], edx
-				.text : 004F7367 8B 50 14                                mov     edx, [eax + 14h]
-				.text : 004F736A 89 51 08                                mov[ecx + 8], edx
-				.text:004F736D 8B 50 18                                mov     edx, [eax + 18h]
-				.text : 004F7370 89 51 0C                                mov[ecx + 0Ch], edx
-				.text : 004F7373 E8 E8 ED 06 00                          call    sub_56616
-			*/
-			__asm
-			{
-				push	latched;
-				push	current;
-				push	modified;
-				push	_type;
-				mov		eax, name;
-				call	sub_566160_func;
-			}
-		}
-
-		//sub_566160@<eax>(int a1@<eax>, int a2, float a3, float a4, float a5)
 
 		void Cmd_AddCommand(const char* name, void(*callback)(), cmd_function_s* data, char)
 		{
@@ -507,6 +611,38 @@ namespace game
 			_R_AddCmdDrawText(text, maxChars, font, x, y, xScale, yScale, 0.0, color, style);
 		}
 
+		void AddBaseDrawConsoleTextCmd(int char_count /*eax*/, const float* color_float /*ecx*/, const char* text_pool, int pool_size, int first_char, game::native::Font_s* font, float x, float y, float x_scale, float y_scale, int style)
+		{
+			const static uint32_t AddBaseDrawConsoleTextCmd_func = 0x5D6B60;
+			__asm
+			{
+				push    style;
+				sub     esp, 10h;
+
+				fld[y_scale];
+				fstp[esp + 0Ch];
+
+				fld[x_scale];
+				fstp[esp + 8];
+
+				fld[y];
+				fstp[esp + 4];
+
+				fld[x];
+				fstp[esp];
+
+				push    font;
+				push    first_char;
+				push    pool_size;
+				push    text_pool;
+				mov     ecx, [color_float];
+				mov     eax, [char_count];
+
+				call	AddBaseDrawConsoleTextCmd_func;
+				add     esp, 24h;
+			}
+		}
+
 		void ConDraw_Box(float* color, float x, float y, float width, float height)
 		{
 			const static uint32_t ConDraw_Box_func = 0x45B820;
@@ -594,6 +730,100 @@ namespace game
 				call Conbuf_AppendText_func;
 			}
 		}
+
+		// wrapper not correct ?!
+		void R_AddCmdDrawTextASM(const char* text, int max_chars, void* font, float x, float y, float x_scale, float y_scale, float rotation, const float* color, int style)
+		{
+			const static uint32_t R_AddCmdDrawText_func = 0x5D6700;
+			__asm
+			{
+				push	style;
+				sub     esp, 14h;
+
+				fld		rotation;
+				fstp[esp + 10h];
+
+				fld		y_scale;
+				fstp[esp + 0Ch];
+
+				fld		x_scale;
+				fstp[esp + 8];
+
+				fld		y;
+				fstp[esp + 4];
+
+				fld		x;
+				fstp[esp];
+
+				push	font;
+				push	max_chars;
+				push	text;
+				mov		ecx, [color];
+
+				call	R_AddCmdDrawText_func;
+				add		esp, 24h;
+			}
+		}
+
+		void draw_text_with_engine(float x, float y, float scale_x, float scale_y, const float* color, const char* text)
+		{
+			void* fontHandle = R_RegisterFont(FONT_NORMAL, sizeof(FONT_NORMAL));
+			R_AddCmdDrawTextASM(text, 0x7FFFFFFF, fontHandle, x, y, scale_x, scale_y, 0.0f, color, 0);
+		}
+
+		scr_classStruct_t gScrClassMap[] =
+		{
+		  { 0u, 0u, 'e', "entity" },
+		  { 0u, 0u, 'h', "hudelem" },
+		  { 0u, 0u, 'p', "pathnode" },
+		  { 0u, 0u, 'v', "vehiclenode" },
+		  { 0u, 0u, 'd', "dynentity" }
+		};
+
+		#define VAR_STAT_MASK 0x60
+		#define VAR_MASK 0x1F
+		#define VAR_STAT_FREE 0
+		#define VAR_STAT_MOVABLE 32
+		#define VAR_STAT_HEAD 64
+		#define IsObject(var) ((var->w.type & VAR_MASK) >= VAR_THREAD)
+		#define IsObjectVal(var) ((var->type & VAR_MASK) >= VAR_THREAD)
+		#define VAR_TYPE(var) (var->w.type & VAR_MASK)
+		#define VARIABLELIST_CHILD_BEGIN 0x8002
+		#define VARIABLELIST_PARENT_BEGIN 0x1
+		#define VAR_STAT_EXTERNAL 96
+		#define VAR_NAME_HIGH_MASK 0xFFFFFF00
+		#define VARIABLELIST_CHILD_SIZE 0xFFFE
+		#define VARIABLELIST_PARENT_SIZE 0x8000
+		#define CLASS_NUM_COUNT sizeof(gScrClassMap)/sizeof(gScrClassMap[0])
+		#define UNK_ENTNUM_MASK 0x3FFF
+		#define SL_MAX_STRING_INDEX 0x10000
+		#define MAX_ARRAYINDEX 0x800000
+		#define VAR_ARRAYINDEXSTART 0x800000
+		#define VAR_NAME_BITS 8
+		#define SCR_GET_ENTITY_FROM_ENTCLIENT(entcl) (entcl & UNK_ENTNUM_MASK)
+		//#define SCR_GET_CLIENT_FROM_ENTCLIENT(entcl) ((uint16_t)(entcl >> 14))
+		#define MAX_LOCAL_CENTITIES 1536
+		//#define OBJECT_STACK 0x17FFFu //But for CoD4?
+		#define OBJECT_STACK 0x18001u
+
+		#define FIRST_OBJECT VAR_THREAD
+		#define FIRST_NONFIELD_OBJECT VAR_ARRAY
+		#define FIRST_DEAD_OBJECT VAR_DEAD_THREAD
+
+		scr_entref_t __cdecl Scr_GetEntityIdRef(unsigned int entId)
+		{
+			VariableValueInternal* entValue;
+			scr_entref_t ref{};
+
+			entValue = &scr_VarGlob->variableList[entId + VARIABLELIST_PARENT_BEGIN];
+			assert((entValue->w.type & VAR_MASK) == VAR_ENTITY);
+			assert((entValue->w.name >> VAR_NAME_BITS) < CLASS_NUM_COUNT);
+
+			ref.entnum = entValue->u.o.u.entnum & UNK_ENTNUM_MASK;
+			ref.classnum = entValue->w.classnum >> VAR_NAME_BITS;
+			return ref;
+		}
+
 
 		float Vec3Normalize(vec3_t& vec)
 		{
@@ -1221,6 +1451,104 @@ namespace game
 
 			return x * x + y * y + z * z;
 		}
+
+		namespace wrappers
+		{
+			const char* SL_ConvertToString(scr_string_t stringValue)
+			{
+				struct stringList
+				{
+					int unk;
+					char string[1];
+					int unk2;
+				};
+
+				return (*reinterpret_cast<stringList**>(0x14E8A04))[stringValue & 0xFFFF].string;
+			}
+
+			void Scr_ShutdownAllocNode()
+			{
+				auto unk = *reinterpret_cast<DWORD*>(0x14E1064);
+				if (unk)
+				{
+					sub_55EBB0(unk);
+					utils::hook::set(0x14E1064, 0);
+				}
+			}
+		}
+
+		namespace network
+		{
+			void SockadrToNetadr(sockaddr* from, netadr_t* addr)
+			{
+				int ip; // edx
+				__int16 port; // cx
+				int v29; // ecx
+				__int16 v30; // dx
+
+				if (from->sa_family == 2)
+				{
+					ip = *(DWORD*)&from->sa_data[2];
+					port = *(WORD*)from->sa_data;
+
+					addr->type = NA_IP;
+					addr->ip.full = ip;
+					//*(DWORD*)(addr + 4) = ip; // hacky way to set IP to ip
+				}
+				else
+				{
+					if (from->sa_family != 6)
+					{
+						return;
+					}
+
+					v29 = *(DWORD*)&from->sa_data[4];
+
+					*(DWORD*)(addr + 10) = *(DWORD*)from->sa_data; // hacky way to set IP to ipx
+					v30 = *(WORD*)&from->sa_data[8];
+					*(DWORD*)(addr + 14) = v29;
+					port = *(WORD*)&from->sa_data[10];
+					addr->type = NA_IP6;
+					*(WORD*)(addr + 18) = v30;
+				}
+				addr->port = port;
+				return;
+			}
+
+			bool NET_CompareAdr(netadr_t a, netadr_t b)
+			{
+				static const uint32_t NET_CompareAdr_addr = 0x503390;
+				int ret{};
+
+				__asm
+				{
+					mov ecx, b;
+					mov eax, a;
+					call NET_CompareAdr_addr;
+					mov ret, eax
+				}
+
+				return ret;
+			}
+
+			void NetadrToSockadr(netadr_t* a, sockaddr* s)
+			{
+				static const uint32_t NetadrToSockadr_addr = 0x572300;
+
+				__asm
+				{
+					mov ecx, s;
+					mov eax, a;
+					call NetadrToSockadr_addr;
+				}
+			}
+
+			bool NET_IsLocalAddress(netadr_t adr)
+			{
+				return !adr.type == NA_BAD || adr.type == NA_LOOPBACK;
+			}
+		}
+
 
 		namespace glob
 		{

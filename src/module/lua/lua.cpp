@@ -1,15 +1,17 @@
 #include <std_include.hpp>
 #include "loader/module_loader.hpp"
 #include "game/game.hpp"
-#include "command.hpp"
-#include "lua.hpp"
 
-#define SOL_ALL_SAFETIES_ON 1
+#include "module/command.hpp"
+#include "module/game_module.hpp"
+#include "module/console.hpp"
+#include "module/scheduler.hpp"
+
 #include <sol/sol.hpp>
 #include <utils/io.hpp>
-#include "game_module.hpp"
-#include "console.hpp"
+#define SOL_ALL_SAFETIES_ON 1
 
+#include "lua.hpp"
 struct globals_t
 {
 	std::string in_require_script;
@@ -29,11 +31,13 @@ void lua_engine::post_load()
 	global_lua.open_libraries(sol::lib::base);
 	global_lua.new_usertype<Engine>("_engine", sol::constructors<void()>(),
 		"Conbuf_AppendText", &Engine::Conbuf_AppendText,
+		"drawText", &Engine::drawText,
 		"mapname", &Engine::mapname,
 		"gametype", &Engine::gametype,
 		"GetDvarFloat", &Engine::GetDvarFloat
 		);
 	global_lua.script("Engine = _engine.new()");
+	global_lua.globals()["level"] = &game::native::UI_GetCurrentMapName;
 }
 
 
@@ -108,4 +112,4 @@ void lua_engine::post_unpack()
 }
 
 
-//REGISTER_MODULE(lua_engine);
+REGISTER_MODULE(lua_engine);

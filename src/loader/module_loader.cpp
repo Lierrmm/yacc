@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "module_loader.hpp"
+#include <utils/memory.hpp>
 
 //std::vector<std::unique_ptr<module>>* module_loader::modules_ = nullptr;
 
@@ -13,6 +14,8 @@
 //
 //	modules_->push_back(std::move(module_));
 //}
+
+bool module_loader::uninitializing = false;
 
 void module_loader::register_module(std::unique_ptr<module>&& component_)
 {
@@ -123,6 +126,27 @@ void* module_loader::load_import(const std::string& module, const std::string& f
 	}
 
 	return function_ptr;
+}
+
+bool module_loader::is_uninitializing()
+{
+	return module_loader::uninitializing;
+}
+
+void module_loader::uninitialize()
+{
+	uninitializing = true;
+	auto& components = get_components();
+	std::reverse(components.begin(), components.end());
+
+	for (const auto& module_ : components)
+	{
+		delete &module_;
+	}
+
+	components.clear();
+	utils::memory::get_allocator()->clear();
+	uninitializing = false;
 }
 
 void module_loader::trigger_premature_shutdown()

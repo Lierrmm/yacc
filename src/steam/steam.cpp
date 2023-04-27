@@ -26,6 +26,16 @@ namespace steam
 		callback_list_.push_back(handler);
 	}
 
+	void callbacks::unregister_callback(base* handler)
+	{
+		std::lock_guard _(mutex_);
+
+		std::vector<callbacks::base*>::iterator position = std::find(callback_list_.begin(), callback_list_.end(), handler);
+
+		if (position != callback_list_.end())
+			callback_list_.erase(position);
+	}
+
 	void callbacks::register_call_result(const uint64_t call, base* result)
 	{
 		std::lock_guard _(mutex_);
@@ -45,6 +55,23 @@ namespace steam
 		calls_[call] = true;
 
 		results_.push_back(result);
+	}
+
+	void callbacks::unregister_calls()
+	{
+		std::lock_guard<std::recursive_mutex> _(mutex_);
+
+		for (auto i = calls_.begin(); i != calls_.end(); ++i)
+		{
+			if (i->second)
+			{
+				i = calls_.erase(i);
+			}
+			else
+			{
+				++i;
+			}
+		}
 	}
 
 	void callbacks::run_callbacks()

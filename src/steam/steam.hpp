@@ -80,8 +80,10 @@ namespace steam
 
 		static uint64_t register_call();
 		static void register_callback(base* handler, int callback);
+		static void unregister_callback(base* handler);
 		static void register_call_result(uint64_t call, base* result);
 		static void return_call(void* data, int size, int type, uint64_t call);
+		static void unregister_calls();
 		static void run_callbacks();
 
 	private:

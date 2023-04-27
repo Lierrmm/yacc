@@ -5,15 +5,33 @@ namespace utils::string
 {
 	template <typename T> using Slot = std::function<T>;
 
+	class InfoString
+	{
+	public:
+		InfoString() {};
+		InfoString(const std::string& buffer) : InfoString() { this->parse(buffer); };
+
+		void set(const std::string& key, const std::string& value);
+		std::string get(const std::string& key);
+		std::string build();
+
+		void dump();
+
+		json11::Json to_json();
+
+	private:
+		std::map<std::string, std::string> keyValuePairs;
+		void parse(std::string buffer);
+	};
+
 	template <size_t Buffers, size_t MinBufferSize>
 	class va_provider final
 	{
 	public:
 		static_assert(Buffers != 0 && MinBufferSize != 0, "Buffers and MinBufferSize mustn't be 0");
 
-		va_provider() : current_buffer_(0)
-		{
-		}
+		va_provider() : current_buffer_(0) {}
+		~va_provider() = default;
 
 		char* get(const char* format, const va_list ap)
 		{

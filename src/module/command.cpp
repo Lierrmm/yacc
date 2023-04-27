@@ -18,6 +18,19 @@ const char* command::params::operator[](size_t index)
 	return game::native::cmd_args->argv[this->command_id][index];
 }
 
+std::string command::params::join(const int index)
+{
+	std::string result;
+
+	for (auto i = index; i < this->length(); i++)
+	{
+		if (i > index) result.append(" ");
+		result.append(game::native::cmd_args->argv[this->command_id][i]);
+	}
+
+	return result;
+}
+
 size_t command::params::length()
 {
 	return game::native::cmd_args->argc[this->command_id];

@@ -4,18 +4,83 @@
 #define VA_BUFFER_SIZE		65536
 namespace utils::string
 {
+	void InfoString::set(const std::string& key, const std::string& value)
+	{
+		this->keyValuePairs[key] = value;
+	}
+
+	std::string InfoString::get(const std::string& key)
+	{
+		const auto value = this->keyValuePairs.find(key);
+		if (value != this->keyValuePairs.end())
+		{
+			return value->second;
+		}
+
+		return "";
+	}
+
+	void InfoString::parse(std::string buffer)
+	{
+		if (buffer[0] == '\\')
+		{
+			buffer = buffer.substr(1);
+		}
+
+		auto KeyValues = split(buffer, '\\');
+
+		for (size_t i = 0; !KeyValues.empty() && i < (KeyValues.size() - 1); i += 2)
+		{
+			const auto& key = KeyValues[i];
+			const auto& value = KeyValues[i + 1];
+			this->keyValuePairs[key] = value;
+		}
+	}
+
+	std::string InfoString::build()
+	{
+		std::string infoString;
+
+		auto first = true;
+
+		for (const auto& [key, value] : this->keyValuePairs)
+		{
+			if (first) first = false;
+			else infoString.append("\\");
+
+			infoString.append(key);
+			infoString.append("\\");
+			infoString.append(value);
+		}
+
+		return infoString;
+	}
+
+	void InfoString::dump()
+	{
+		for (const auto& [key, value] : this->keyValuePairs)
+		{
+			OutputDebugStringA(va("%s: %s\n", key.data(), value.data()));
+		}
+	}
+
+	json11::Json InfoString::to_json()
+	{
+		return this->keyValuePairs;
+	}
+
 	const char* va(const char* fmt, ...)
 	{
-		static char g_vaBuffer[VA_BUFFER_COUNT][VA_BUFFER_SIZE];
-		static int g_vaNextBufferIndex = 0;
+		static thread_local va_provider<8, 256> provider;
 
 		va_list ap;
 		va_start(ap, fmt);
-		char* dest = g_vaBuffer[g_vaNextBufferIndex];
-		vsnprintf(g_vaBuffer[g_vaNextBufferIndex], VA_BUFFER_SIZE, fmt, ap);
-		g_vaNextBufferIndex = (g_vaNextBufferIndex + 1) % VA_BUFFER_COUNT;
+
+		const char* result;
+		result = provider.get(fmt, ap);
+
 		va_end(ap);
-		return dest;
+		return result;
 	}
 
 	std::vector<std::string> split(const std::string& s, const char delim)

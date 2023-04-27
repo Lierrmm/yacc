@@ -1,170 +1,188 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
-#include <utils/string.hpp>
-
-#include <utils/hook.hpp>
-#include <utils/thread.hpp>
-#include <utils/concurrency.hpp>
+#include "game/game.hpp"
+#include "game_console.hpp"
 
 #include "scheduler.hpp"
 
-namespace
+std::mutex scheduler::mutex_;
+std::queue<std::pair<std::string, int>> scheduler::errors_;
+utils::concurrent_list<std::pair<std::function<void()>, scheduler::thread>> scheduler::callbacks_;
+utils::concurrent_list<std::pair<std::function<void()>, scheduler::thread>> scheduler::single_callbacks_;
+utils::concurrent_list<std::pair<std::function<scheduler::evaluation()>, scheduler::thread>> scheduler::condition_callbacks_;
+
+void scheduler::on_frame(const std::function<void()> &callback, const thread thread)
 {
-	constexpr bool cond_continue = false;
-	constexpr bool cond_end = true;
-
-	struct task
-	{
-		std::function<bool()> handler{};
-		std::chrono::milliseconds interval{};
-		std::chrono::high_resolution_clock::time_point last_call{};
-	};
-
-	using task_list = std::vector<task>;
-
-	class task_pipeline
-	{
-	public:
-		void add(task&& task)
-		{
-			new_callbacks_.access([&task](task_list& tasks)
-			{
-				tasks.emplace_back(std::move(task));
-			});
-		}
-
-		void execute()
-		{
-			callbacks_.access([&](task_list& tasks)
-			{
-				this->merge_callbacks();
-
-				for (auto i = tasks.begin(); i != tasks.end();)
-				{
-					const auto now = std::chrono::high_resolution_clock::now();
-					const auto diff = now - i->last_call;
-
-					if (diff < i->interval)
-					{
-						++i;
-						continue;
-					}
-
-					i->last_call = now;
-
-					const auto res = i->handler();
-					if (res == cond_end)
-					{
-						i = tasks.erase(i);
-					}
-					else
-					{
-						++i;
-					}
-				}
-			});
-		}
-
-	private:
-		utils::concurrency::container<task_list> new_callbacks_;
-		utils::concurrency::container<task_list, std::recursive_mutex> callbacks_;
-
-		void merge_callbacks()
-		{
-			callbacks_.access([&](task_list& tasks)
-			{
-				new_callbacks_.access([&](task_list& new_tasks)
-				{
-					tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()), std::move_iterator<task_list::iterator>(new_tasks.end()));
-					new_tasks = {};
-				});
-			});
-		}
-	};
-
-	volatile bool kill = false;
-	std::thread thread;
-	task_pipeline pipelines[scheduler::pipeline::count];
+	callbacks_.add({ callback, thread });
 }
 
-void scheduler::execute(const pipeline type)
+void scheduler::delay(const std::function<void()>& callback, const std::chrono::milliseconds delay, const thread thread)
 {
-	assert(type >= 0 && type < pipeline::count);
-	pipelines[type].execute();
+	const auto begin = std::chrono::high_resolution_clock::now();
+
+	until([=]()
+		{
+			if ((std::chrono::high_resolution_clock::now() - begin) > delay)
+			{
+				callback();
+				return evaluation::remove;
+			}
+
+			return evaluation::reschedule; },
+		thread);
+}
+
+void scheduler::once(const std::function<void()>& callback, const thread thread)
+{
+	single_callbacks_.add({ callback, thread });
+}
+
+void scheduler::until(const std::function<evaluation()>& callback, thread thread)
+{
+	condition_callbacks_.add({ callback, thread });
+}
+
+void scheduler::error(const std::string& message, int level)
+{
+	std::lock_guard _(mutex_);
+	errors_.emplace(message, level);
 }
 
 __declspec(naked) void scheduler::main_frame_stub()
+{
+	static const int execution_thread = thread::main;
+	const static uint32_t retn_addr = 0x4FA8F0;
+	__asm
 	{
-		static const int execution_thread = pipeline::main;
-		const static uint32_t retn_addr = 0x4FA8F0;
-		__asm
-		{
-			pushad;
-			push	execution_thread;
-			call	execute;
-			pop		eax;
-			popad;
+		pushad;
+		push	execution_thread;
+		call	execute;
+		pop		eax;
+		popad;
 
-			jmp		retn_addr;
+		jmp		retn_addr;
+	}
+}
+
+__declspec(naked) void scheduler::renderer_frame_stub_stock()
+{
+	static const int execution_thread = thread::renderer;
+	const static uint32_t retn_addr = 0x4597C0;
+	__asm
+	{
+		pushad;
+		push	execution_thread;
+		call	execute;
+		pop		eax;
+		popad;
+
+		jmp		retn_addr;
+	}
+}
+
+__declspec(naked) void scheduler::renderer_frame_stub_con_addon()
+{
+	static const int execution_thread = thread::renderer;
+
+	__asm
+	{
+		pushad;
+		push	execution_thread;
+		call	execute;
+		pop		eax;
+		popad;
+
+		call	new_console::check_resize;
+		retn;
+	}
+}
+
+__declspec(naked) void scheduler::execute(thread)
+{
+	__asm
+	{
+		push[esp + 4h];
+
+		call	execute_error;
+		call	execute_safe;
+
+		add		esp, 4h;
+		retn;
+	}
+}
+
+void scheduler::execute_safe(const thread thread)
+{
+	for (const auto callback : callbacks_)
+	{
+		if (callback->second == thread)
+		{
+			callback->first();
 		}
 	}
 
-void scheduler::schedule(const std::function<bool()>& callback, const pipeline type,
-	const std::chrono::milliseconds delay)
-{
-	assert(type >= 0 && type < pipeline::count);
-
-	task task;
-	task.handler = callback;
-	task.interval = delay;
-	task.last_call = std::chrono::high_resolution_clock::now();
-
-	pipelines[type].add(std::move(task));
-}
-
-void scheduler::loop(const std::function<void()>& callback, const pipeline type,
-	const std::chrono::milliseconds delay)
-{
-	schedule([callback]()
+	for (auto callback : single_callbacks_)
 	{
-		callback();
-		return cond_continue;
-	}, type, delay);
-}
-
-void scheduler::once(const std::function<void()>& callback, const pipeline type,
-	const std::chrono::milliseconds delay)
-{
-	schedule([callback]
-	{
-		callback();
-		return cond_end;
-	}, type, delay);
-}
-
-
-void scheduler::post_start()
-{
-	thread = utils::thread::create_named_thread("Async Scheduler", []()
-	{
-		while (!kill)
+		if (callback->second == thread)
 		{
-			execute(pipeline::async);
-			std::this_thread::sleep_for(10ms);
+			single_callbacks_.remove(callback);
+			callback->first();
 		}
-	});
+	}
+
+	for (auto callback : condition_callbacks_)
+	{
+		if (callback->second == thread)
+		{
+			if (callback->first() == evaluation::remove)
+			{
+				condition_callbacks_.remove(callback);
+			}
+		}
+	}
 }
 
-void scheduler::post_unpack()
+void scheduler::execute_error(thread thread)
+{
+	const char* message;
+	int level;
+
+	if (get_next_error(&message, &level) && message)
+	{
+		game::native::Com_Error(level, "%s", message);
+	}
+}
+
+bool scheduler::get_next_error(const char** error_message, int* error_level)
+{
+	std::lock_guard _(mutex_);
+	if (errors_.empty())
+	{
+		*error_message = nullptr;
+		return false;
+	}
+
+	const auto error = errors_.front();
+	errors_.pop();
+
+	*error_level = error.second;
+	*error_message = utils::string::va("%s", error.first.data());
+
+	return true;
+}
+
+void scheduler::post_load()
 {
 	utils::hook(0x4FACE8, main_frame_stub, HOOK_CALL).install()->quick();
-}
 
-void scheduler::pre_destroy()
-{
-	kill = true;
-	if (thread.joinable())
+	if (new_console::is_using_custom_console())
 	{
-		thread.join();
+		utils::hook(0x4705EE, renderer_frame_stub_con_addon, HOOK_CALL).install()->quick(); // call yacc_con_CheckResize if console addon is loaded
+	}
+	else
+	{
+		utils::hook(0x4705EE, renderer_frame_stub_stock, HOOK_CALL).install()->quick(); // call stock Con_CheckResize otherwise
 	}
 }
+
+REGISTER_MODULE(scheduler);

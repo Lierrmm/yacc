@@ -25,7 +25,7 @@ console::console()
 
 void console::post_load()
 {
-	scheduler::loop(std::bind(&console::log_messages, this), scheduler::pipeline::main);
+	scheduler::on_frame(std::bind(&console::log_messages, this));
 	this->console_runner_ = std::thread(std::bind(&console::runner, this));
 }
 

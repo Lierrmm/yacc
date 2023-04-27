@@ -1,40 +1,46 @@
 #include <std_include.hpp>
+
+#include <game/game.hpp>
+
 #include "time.hpp"
 
-namespace utils::time
+namespace utils
 {
-	void Interval::update()
+	namespace time
 	{
-		this->lastPoint = std::chrono::high_resolution_clock::now();
-	}
+		void Interval::update()
+		{
+			this->lastPoint = std::chrono::high_resolution_clock::now();
+		}
 
-	bool Interval::elapsed(std::chrono::nanoseconds nsecs)
-	{
-		return ((std::chrono::high_resolution_clock::now() - this->lastPoint) >= nsecs);
-	}
+		bool Interval::elapsed(std::chrono::nanoseconds nsecs)
+		{
+			return ((std::chrono::high_resolution_clock::now() - this->lastPoint) >= nsecs);
+		}
 
-	Point::Point() : lastPoint(game::native::Sys_Milliseconds())
-	{
+		Point::Point() : lastPoint(game::native::Sys_Milliseconds())
+		{
 
-	}
+		}
 
-	void Point::update()
-	{
-		this->lastPoint = game::native::Sys_Milliseconds();
-	}
+		void Point::update()
+		{
+			this->lastPoint = game::native::Sys_Milliseconds();
+		}
 
-	int Point::diff(Point point)
-	{
-		return point.lastPoint - this->lastPoint;
-	}
+		int Point::diff(Point point)
+		{
+			return point.lastPoint - this->lastPoint;
+		}
 
-	bool Point::after(Point point)
-	{
-		return this->diff(point) < 0;
-	}
+		bool Point::after(Point point)
+		{
+			return this->diff(point) < 0;
+		}
 
-	bool Point::elapsed(int milliseconds)
-	{
-		return (game::native::Sys_Milliseconds() - this->lastPoint) >= milliseconds;
+		bool Point::elapsed(int milliseconds)
+		{
+			return (game::native::Sys_Milliseconds() - this->lastPoint) >= milliseconds;
+		}
 	}
 }

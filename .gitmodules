@@ -33,10 +33,6 @@
 [submodule "deps/minhook"]
 	path = deps/minhook
 	url = https://github.com/TsudaKageyu/minhook.git
-[submodule "deps/gsc-tool"]
-	path = deps/gsc-tool
-	url = https://github.com/xensik/gsc-tool.git
-	branch = dev
 [submodule "deps/dxsdk"]
 	path = deps/dxsdk
 	url = https://github.com/devKlausS/dxsdk.git
@@ -49,3 +45,9 @@
 [submodule "deps/sol2"]
 	path = deps/sol2
 	url = https://github.com/ThePhD/sol2.git
+[submodule "deps/imgui"]
+	path = deps/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "deps/json11"]
+	path = deps/json11
+	url = https://github.com/dropbox/json11.git

@@ -146,6 +146,9 @@ namespace utils
 		static void nop(void* place, size_t length);
 		static void nop(DWORD place, size_t length);
 
+		static void RedirectJump(void* place, void* stub);
+		static void RedirectJump(DWORD place, void* stub);
+
 		template <typename T> static std::function<T> Call(DWORD function)
 		{
 			return std::function<T>(reinterpret_cast<T*>(function));
@@ -211,6 +214,16 @@ namespace utils
 		static T invoke(void* func, Args ... args)
 		{
 			return static_cast<T(*)(Args ...)>(func)(args...);
+		}
+
+		template <typename T> static T get(void* place)
+		{
+			return *static_cast<T*>(place);
+		}
+
+		template <typename T> static T get(DWORD place)
+		{
+			return get<T>(reinterpret_cast<void*>(place));
 		}
 
 	private:
