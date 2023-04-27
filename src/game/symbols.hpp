@@ -198,7 +198,7 @@ namespace game
 		WEAK symbol <void()> Key_SetCatcher{  0x464A80 };
 		WEAK symbol <const char*()> Sys_DefaultInstallPath{  0x56D480 };
 		WEAK symbol <void(const char* map)> LoadMapLoadScreenInternal{  0x466C00 };
-		WEAK symbol <dvar_t*(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{  0x567830 };
+		//WEAK symbol <dvar_t*(const char* dvarName, const char* string, int arg3)> Dvar_SetFromStringByName{ 0x567830 };
 		WEAK symbol <bool(const char* address, netadr_t* adr)> NET_StringToAdr{ 0x503A80 };
 		WEAK symbol <const char* (const char* pszInputBuffer, const char* pszMessageType, msgLocErrType_t errType)> SEH_LocalizeTextMessage{ 0x533730 };
 		WEAK symbol <void(const char* var_name, const char* var_value)> Cvar_SetCommand{ 0x5678A0 };

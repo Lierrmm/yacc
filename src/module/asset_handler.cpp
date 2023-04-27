@@ -107,10 +107,10 @@ game::native::XAssetHeader AssetHandler::AddAsset(game::native::XAssetType type,
 	if (!AssetHandler::IsAssetEligible(type, asset))
 		return {};
 
-	return add_xasset_hook.invoke<game::native::XAssetHeader>(asset, type);
+	return add_xasset_hook.invoke<game::native::XAssetHeader>(asset);
 }
 
-void AssetHandler::DB_AddXAsset(game::native::XAssetHeader asset)
+void AssetHandler::DB_AddXAsset(game::native::XAssetHeader asset/*, game::native::XAssetType type*/)
 {
 	uint32_t result{};
 	// move eax register into result
@@ -120,8 +120,64 @@ void AssetHandler::DB_AddXAsset(game::native::XAssetHeader asset)
 		mov result, eax
 	}
 
+	if (result == NULL)
+		return;
+
 	game::native::XAssetType _type = (game::native::XAssetType)result;
 	AssetHandler::AddAsset(_type, asset);
+}
+
+void AssetHandler::test(game::native::XAssetType* type/*, game::native::XAssetHeader* header*/)
+{
+	uint32_t result{};
+	__asm
+	{
+		mov eax, [esp + 30h]
+		mov result, eax
+		pop eax
+	}
+
+	game::native::XAssetHeader header = *(game::native::XAssetHeader*)result;
+	auto fakeType = *type;
+
+	__asm
+	{
+		push eax
+		pushad
+		push[header]
+		push[fakeType]
+		call AssetHandler::IsAssetEligible
+		add esp, 8h
+
+		mov[esp + 18h], eax
+		popad
+		pop eax
+
+		test al, al
+		jz doNotLoad
+
+		mov     ebp, esp
+		and esp, 0FFFFFFF8h
+		sub     esp, 88Ch
+		push    ebx
+		push    esi
+		push    edi
+		mov     edi, [ebp + 8]
+		//mov     eax, [edi]
+		mov ecx, 484FF0h
+		jmp ecx
+
+		doNotLoad :
+		mov     ebp, esp
+		and esp, 0FFFFFFF8h
+		sub     esp, 88Ch
+		push    ebx
+		push    esi
+		push    edi
+		mov     edi, [ebp + 8]
+		//mov     eax, [edi]
+		retn
+	}
 }
 
 game::native::XAssetHeader AssetHandler::FindTemporaryAsset(game::native::XAssetType type, const char* filename)
@@ -210,7 +266,7 @@ void AssetHandler::post_load()
 
 	find_xasset_header_hook.create(game::native::DB_FindXAssetHeader, AssetHandler::FindAsset);
 	
-	add_xasset_hook.create(0x485330, AssetHandler::DB_AddXAsset);
+	//add_xasset_hook.create(0x485330, AssetHandler::DB_AddXAsset);
 }
 
 void AssetHandler::pre_destroy()

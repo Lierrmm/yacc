@@ -9,7 +9,6 @@
 #include "ui_script.hpp"
 
 std::unordered_map<std::string, utils::string::Slot<UIScript::Callback>> UIScript::UIScripts;
-std::unordered_map<int, utils::string::Slot<UIScript::CallbackRaw>> UIScript::UIOwnerDraws;
 
 template<> int UIScript::Token::get()
 {
@@ -54,11 +53,6 @@ void UIScript::Add(const std::string& name, utils::string::Slot<UIScript::Callba
 	UIScript::UIScripts[name] = callback;
 }
 
-void UIScript::AddOwnerDraw(int ownerdraw, utils::string::Slot<UIScript::CallbackRaw> callback)
-{
-	UIScript::UIOwnerDraws[ownerdraw] = callback;
-}
-
 bool UIScript::RunMenuScript(const char* name, const char** args)
 {
 	if (UIScript::UIScripts.find(name) != UIScript::UIScripts.end())
@@ -69,22 +63,6 @@ bool UIScript::RunMenuScript(const char* name, const char** args)
 
 	return false;
 }
-
-//void UIScript::OwnerDrawHandleKeyStub(int ownerDraw, int flags, float* special, int key)
-//{
-//	if (key == 200 || key == 201) //mouse buttons
-//	{
-//		for (auto i = UIScript::UIOwnerDraws.begin(); i != UIScript::UIOwnerDraws.end(); ++i)
-//		{
-//			if (i->first == ownerDraw)
-//			{
-//				i->second();
-//			}
-//		}
-//	}
-//
-//	Utils::Hook::Call<void(int, int, float*, int)>(0x4F58A0)(ownerDraw, flags, special, key);
-//}
 
 __declspec(naked) void UIScript::RunMenuScriptStub()
 {
@@ -131,7 +109,6 @@ void UIScript::post_load()
 void UIScript::pre_destroy()
 {
 	UIScript::UIScripts.clear();
-	//UIScript::UIOwnerDraws.clear();
 }
 
 REGISTER_MODULE(UIScript);

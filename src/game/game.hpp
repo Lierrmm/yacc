@@ -180,51 +180,6 @@ namespace game
 			extern bool NET_IsLocalAddress(netadr_t adr);
 		}
 
-		namespace glob
-		{
-			// general
-			extern std::string loaded_modules;
-			extern std::string loaded_libaries;
-
-			// movement
-			extern bool lpmove_check_jump; // if Jumped in Check_Jump, reset after x frames in PmoveSingle
-
-			extern vec3_t lpmove_velocity;	// grab local player velocity
-			extern vec3_t lpmove_origin;		// grab local player origin
-			extern vec3_t lpmove_angles;		// grab local player angles
-			extern vec3_t lpmove_camera_origin; // grab local camera origin
-
-			// ui / devgui
-			extern bool loaded_main_menu;
-			extern bool mainmenu_fade_done;
-
-			extern gui_t gui;
-			extern std::string changelog_html_body;
-
-			// renderer
-			extern void* d3d9_device;
-
-			// debug collision
-			extern bool debug_collision_initialized; // debug collision was used
-			extern int  debug_collision_rendered_brush_amount; // total amount of brushes used for calculations of planes 
-			extern int  debug_collision_rendered_planes_amount;	// total amount of planes rendered 
-			extern int  debug_collision_rendered_planes_counter; // total amount of planes rendered used to count while drawing
-
-			extern std::string	r_drawCollision_materialList_string;
-
-			// Frametime
-			extern int lpmove_server_time;
-			extern int lpmove_server_time_old;
-			extern int lpmove_server_frame_time;
-			extern int lpmove_pml_frame_time;
-
-			// Misc
-			extern int q3_last_projectile_weapon_used; // ENUM Q3WeaponNames :: this var holds the last proj. weapon that got fired
-		}
-
-		// Global Definitions & Functions
-		constexpr auto JUMP_LAND_SLOWDOWN_TIME = 1800;
-
 		constexpr auto MAX_QPATH = 64;
 		constexpr auto MAX_OSPATH = 256;
 

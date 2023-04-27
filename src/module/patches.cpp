@@ -19,8 +19,6 @@
 // on renderer initialization
 void print_loaded_modules()
 {
-	game::native::Com_PrintMessage(0, utils::string::va("-------------- Loaded Modules -------------- \n%s\n", game::native::glob::loaded_modules.c_str()), 0);
-
 	// add FS Path output print
 	if (const auto& dedicated = game::native::Dvar_FindVar("dedicated");
 		dedicated && dedicated->current.integer == 0)

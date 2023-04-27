@@ -136,4 +136,4 @@ std::string console::format(va_list* ap, const char* message)
 	return {buffer, static_cast<std::size_t>(count)};
 }
 
-REGISTER_MODULE(console)
+//REGISTER_MODULE(console)
