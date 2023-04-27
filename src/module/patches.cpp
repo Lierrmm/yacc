@@ -1,16 +1,20 @@
 #include <std_include.hpp>
 #include <loader/module_loader.hpp>
+
 #include "game/game.hpp"
+
 #include "console.hpp"
 #include "scheduler.hpp"
-
 #include "version.hpp"
+#include "command.hpp"
+#include "localization.hpp"
+#include "ui_script.hpp"
 
 #include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include "command.hpp"
 #include <utils/io.hpp>
+#include <utils/_utils.hpp>
 
 // on renderer initialization
 void print_loaded_modules()
@@ -40,61 +44,12 @@ __declspec(naked) void CL_PreInitRenderer_stub()
 	}
 }
 
-// r_init
-__declspec(naked) void console_printfix_stub_01()
-{
-	const static uint32_t retn_addr = 0x5D4AF6;
-	const static char* print = "\n-------------- R_Init --------------\n";
-	__asm
-	{
-		push	print;
-		jmp		retn_addr;
-	}
-}
-
-// working directory
-__declspec(naked) void console_printfix_stub_02()
-{
-	const static uint32_t retn_addr = 0x571DA2;
-	const static char* print = "Working directory: %s\n\n";
-	__asm
-	{
-		push	print;
-		jmp		retn_addr;
-	}
-}
-
-// server initialization
-__declspec(naked) void console_printfix_stub_03()
-{
-	const static uint32_t retn_addr = 0x52A023;
-	const static char* print = "\n------- Server Initialization ---------\n";
-	__asm
-	{
-		push	print;
-		jmp		retn_addr;
-	}
-}
 
 // helper function because cba to do that in asm
 void print_build_on_init()
 {
 	game::native::Com_PrintMessage(0, "\n-------- Game Initialization ----------\n", 0);
 	game::native::Com_PrintMessage(0, utils::string::va("> Build: YACC %s :: %s\n", VERSION, __TIMESTAMP__), 0);
-}
-
-// game init + game name and version
-__declspec(naked) void console_printfix_stub_04()
-{
-	const static uint32_t retn_addr = 0x4BA28F;
-	__asm
-	{
-		pushad;
-		call	print_build_on_init;
-		popad;
-
-		jmp		retn_addr;
-	}
 }
 
 void FS_ReplaceSeparators(char* path) {
@@ -173,96 +128,96 @@ __declspec(naked) void LoadMapLoadscreen(const char* name)
 	}
 }
 
-void copy_startup_files()
-{
-	const auto splashResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_SPLASH), "Image");
-	if (!splashResource)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to find custom splashscreen!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	const auto splashHandle = LoadResource(nullptr, splashResource);
-	if (!splashHandle)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to load custom splashscreen!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	utils::io::write_file("yacc/images/splash.bmp", std::string(LPSTR(LockResource(splashHandle)), SizeofResource(nullptr, splashResource)));
-
-	const auto logoResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_LOGO), "Image");
-	if (!logoResource)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to find custom logo!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	const auto logoHandle = LoadResource(nullptr, logoResource);
-	if (!logoHandle)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to load custom logo!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	utils::io::write_file("yacc/images/logo.bmp", std::string(LPSTR(LockResource(logoHandle)), SizeofResource(nullptr, logoResource)));
-
-	const auto introResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(INTRO_VIDEO), RT_RCDATA);
-	if (!introResource)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to find custom intro!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	const auto introHandle = LoadResource(nullptr, introResource);
-	if (!introHandle)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to load custom intro!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	utils::io::write_file("yacc/video/IW_logo.bik", std::string(LPSTR(LockResource(introHandle)), SizeofResource(nullptr, introResource)));
-
-	// yacc.iwd
-	const auto yaccIwdResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(YACC_IWD), RT_RCDATA);
-	if (!yaccIwdResource)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to find custom yacc.iwd!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	const auto yaccIwdHandle = LoadResource(nullptr, yaccIwdResource);
-	if (!yaccIwdHandle)
-	{
-#if DEBUG
-		MessageBoxA(nullptr, "Failed to load custom yacc.iwd!", "ERROR", MB_ICONERROR);
-#endif
-		return;
-	}
-
-	utils::io::write_file("yacc/yacc.iwd", std::string(LPSTR(LockResource(yaccIwdHandle)), SizeofResource(nullptr, yaccIwdResource)));
-}
+//void copy_startup_files()
+//{
+//	const auto splashResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_SPLASH), "Image");
+//	if (!splashResource)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to find custom splashscreen!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	const auto splashHandle = LoadResource(nullptr, splashResource);
+//	if (!splashHandle)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to load custom splashscreen!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	utils::io::write_file("yacc/images/splash.bmp", std::string(LPSTR(LockResource(splashHandle)), SizeofResource(nullptr, splashResource)));
+//
+//	const auto logoResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(IMAGE_LOGO), "Image");
+//	if (!logoResource)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to find custom logo!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	const auto logoHandle = LoadResource(nullptr, logoResource);
+//	if (!logoHandle)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to load custom logo!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	utils::io::write_file("yacc/images/logo.bmp", std::string(LPSTR(LockResource(logoHandle)), SizeofResource(nullptr, logoResource)));
+//
+//	const auto introResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(INTRO_VIDEO), RT_RCDATA);
+//	if (!introResource)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to find custom intro!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	const auto introHandle = LoadResource(nullptr, introResource);
+//	if (!introHandle)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to load custom intro!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	utils::io::write_file("yacc/video/IW_logo.bik", std::string(LPSTR(LockResource(introHandle)), SizeofResource(nullptr, introResource)));
+//
+//	// yacc.iwd
+//	const auto yaccIwdResource = FindResource(utils::nt::library(), MAKEINTRESOURCE(YACC_IWD), RT_RCDATA);
+//	if (!yaccIwdResource)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to find custom yacc.iwd!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	const auto yaccIwdHandle = LoadResource(nullptr, yaccIwdResource);
+//	if (!yaccIwdHandle)
+//	{
+//#if DEBUG
+//		MessageBoxA(nullptr, "Failed to load custom yacc.iwd!", "ERROR", MB_ICONERROR);
+//#endif
+//		return;
+//	}
+//
+//	utils::io::write_file("yacc/yacc.iwd", std::string(LPSTR(LockResource(yaccIwdHandle)), SizeofResource(nullptr, yaccIwdResource)));
+//}
 
 class patches final : public module
 {
 public:
 	void post_start() override
 	{
-		copy_startup_files();
+		//copy_startup_files();
 	}
 
 	void post_load() override
@@ -437,10 +392,29 @@ public:
 		utils::hook::set<const char*>(0x5EC9FC, "%s\\" BASEGAME "\\video\\%s.%s");
 
 		utils::hook::nop(0x57616C, 8);
-		scheduler::loop([]()
+		scheduler::on_frame([]()
 		{
 			SetThreadExecutionState(ES_DISPLAY_REQUIRED);
-		}, scheduler::main, 100ms);
+		});
+
+		// stop connect menu showing mapname via engine
+		utils::hook::nop(0x544D10, 5);   // GAMETYPE
+		utils::hook::nop(0x544D56, 5);   // MAPNAME
+		// These handle connecting to server 
+		//utils::hook::nop(0x544BD1, 5);
+		//utils::hook::nop(0x544F58, 5);
+		utils::hook::nop(0x544F84, 5);
+		utils::hook::nop(0x544FF0, 5);   // MODNAME
+
+		// Set UI_SHOWLIST font to normalFont so it's actually readable...
+		utils::hook::set(0x54F10F, 0xCAE8708);
+
+		//scripting demo - move later
+
+		UIScript::Add("visitWebsite", [](UIScript::Token)
+		{
+			utils::_utils::OpenUrl("https://yacc.app");
+		});
 	}
 
 	module_priority priority() const override

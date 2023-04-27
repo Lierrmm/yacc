@@ -12,6 +12,7 @@
 #include "command.hpp"
 #include <utils/io.hpp>
 #include "localization.hpp"
+#include "asset_handler.hpp"
 
 game::native::dvar_t* g_dump_scripts;
 game::native::dvar_t* g_dump_images;
@@ -177,6 +178,29 @@ public:
 		utils::hook::set<const char*>(0x45C8F1, utils::string::va("YACC %s > ", VERSION));
 		utils::hook::set<DWORD>(0x45DE94, (DWORD)(YACC_BUILDSTRING));
 
+		g_dump_images = game::native::Dvar_RegisterBool("g_dump_images", "Dump images to raw/imagedump", false, game::native::dvar_flags::dvar_none);
+		AssetHandler::OnFind(game::native::XAssetType::ASSET_TYPE_IMAGE, [](game::native::XAssetType, const std::string& _filename)
+		{
+			game::native::XAssetHeader header = AssetHandler::FindOriginalAsset(game::native::XAssetType::ASSET_TYPE_IMAGE, _filename.data());
+			if (g_dump_images->current.enabled)
+			{
+				dump_raw_image(_filename, header);
+			}
+
+			return header;
+		});
+
+		AssetHandler::OnFind(game::native::XAssetType::ASSET_TYPE_MATERIAL, [](game::native::XAssetType, const std::string& _filename)
+			{
+				game::native::XAssetHeader header = AssetHandler::FindOriginalAsset(game::native::XAssetType::ASSET_TYPE_MATERIAL, _filename.data());
+				if (g_dump_images->current.enabled)
+				{
+					dump_images_from_material(_filename, header);
+				}
+
+				return header;
+			});
+
 		// open / re-open the specified menu from uicontext->menus
 		command::add("menu_open", "<menu_name>", "open / re-open the specified menu from uicontext->menus", [](command::params params)
 		{
@@ -199,7 +223,6 @@ public:
 			game::native::Menus_CloseByName(name, ui);
 			game::native::Menus_OpenByName(name, ui);
 		});
-
 
 		command::add("menu_open_ingame", "<menu_name>", "wip", [](command::params params)
 		{
@@ -285,15 +308,14 @@ public:
 			/* name		*/ "ui_ultrawide",
 			/* desc		*/ "menu helper",
 			/* default	*/ false,
-			/* flags	*/ game::native::dvar_flags::read_only);		
+			/* flags	*/ game::native::dvar_flags::read_only);
 	}
 
 	void post_unpack() override
 	{
 		localization::Set("MPUI_WELCOME", "Welcome to the YACC COD4 ^3Alpha");
+		localization::Set("MPUI_CHOOSE_LOADOUT", "CHOOSE LOADOUT");
 	}
 };
-
-
 
 REGISTER_MODULE(ui)

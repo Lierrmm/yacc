@@ -78,10 +78,6 @@ game::native::StringTable* stringtable::LoadObject(std::string filename)
 	return table;
 }
 
-utils::hook::detour sdb_find_xasset_header_hook;
-
-
-
 void stringtable::post_load()
 {
 	AssetHandler::OnFind(game::native::XAssetType::ASSET_TYPE_STRINGTABLE, [](game::native::XAssetType, const std::string& _filename)

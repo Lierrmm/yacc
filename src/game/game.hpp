@@ -16,7 +16,7 @@
 #define CUSTOM_MASTER_IP "192.168.50.100"
 #define CUSTOM_MASTER_PORT 20810
 
-#define USING_CUSTOM_MASTER // unset this to use default masterserver
+//#define USING_CUSTOM_MASTER // unset this to use default masterserver
 
 namespace game
 {

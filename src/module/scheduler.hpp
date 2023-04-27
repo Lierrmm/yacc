@@ -14,7 +14,7 @@ public:
 
 	enum thread
 	{
-		//async = 0,
+		async = 0,
 		main,
 		renderer,
 	};
@@ -32,6 +32,8 @@ public:
 	static void error(const std::string& message, int level);
 
 	void post_load() override;
+	void pre_destroy() override;
+	void post_start() override;
 
 private:
 	static std::mutex mutex_;

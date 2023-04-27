@@ -58,17 +58,18 @@ namespace
 			discord_presence.state = host_name;
 			discord_presence.partyMax = game::native::Dvar_FindVar("sv_maxclients")->current.integer;
 
-			std::hash<game::native::netadr_t> hash_fn;
+			/*std::hash<game::native::netadr_t> hash_fn;
 			static const auto nonce = utils::cryptography::random::get_integer();
 			
 			game::native::netadr_t address{};
 			address = *game::native::serverAddress;
 			if (address.type != game::native::NA_BAD || address.type != game::native::NA_LOOPBACK)
 			{
+				auto _address = network::Address(address);
 				discord_presence.partyId = utils::string::va("%zu", hash_fn(address) ^ nonce);
-				discord_presence.joinSecret = network::net_adr_to_string(address);
+				discord_presence.joinSecret = _address.getCString();
 				discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
-			}
+			}*/
 			
 
 			if (!discord_presence.startTimestamp)
@@ -101,7 +102,7 @@ public:
 
 		Discord_Initialize("1084807026217078855", &handlers, 1, nullptr);
 
-		scheduler::loop(update_discord, scheduler::async, 20s);
+		scheduler::on_frame(update_discord, scheduler::async);
 
 		initialized_ = true;
 	}

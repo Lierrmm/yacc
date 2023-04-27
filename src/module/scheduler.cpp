@@ -11,6 +11,9 @@ utils::concurrent_list<std::pair<std::function<void()>, scheduler::thread>> sche
 utils::concurrent_list<std::pair<std::function<void()>, scheduler::thread>> scheduler::single_callbacks_;
 utils::concurrent_list<std::pair<std::function<scheduler::evaluation()>, scheduler::thread>> scheduler::condition_callbacks_;
 
+volatile bool kill = false;
+std::thread _thread;
+
 void scheduler::on_frame(const std::function<void()> &callback, const thread thread)
 {
 	callbacks_.add({ callback, thread });
@@ -171,6 +174,18 @@ bool scheduler::get_next_error(const char** error_message, int* error_level)
 	return true;
 }
 
+void scheduler::post_start()
+{
+	_thread = utils::thread::create_named_thread("Async Scheduler", []()
+	{
+		while (!kill)
+		{
+			execute(thread::async);
+			std::this_thread::sleep_for(10ms);
+		}
+	});
+}
+
 void scheduler::post_load()
 {
 	utils::hook(0x4FACE8, main_frame_stub, HOOK_CALL).install()->quick();
@@ -182,6 +197,15 @@ void scheduler::post_load()
 	else
 	{
 		utils::hook(0x4705EE, renderer_frame_stub_stock, HOOK_CALL).install()->quick(); // call stock Con_CheckResize otherwise
+	}
+}
+
+void scheduler::pre_destroy()
+{
+	kill = true;
+	if (_thread.joinable())
+	{
+		_thread.join();
 	}
 }
 

@@ -7,6 +7,27 @@
 #include "console.hpp"
 #include <utils/io.hpp>
 #include "command.hpp"
+#include "scheduler.hpp"
+
+
+void register_additional_dvars()
+{
+}
+
+__declspec(naked) void register_additional_dvars_stub()
+{
+	const static uint32_t R_RegisterSunDvars_func = 0x615AB0;
+	const static uint32_t retn_addr = 0x6095F0;
+	__asm
+	{
+		pushad;
+		call	register_additional_dvars;
+		popad;
+
+		call	R_RegisterSunDvars_func;
+		jmp		retn_addr;
+	}
+}
 
 void force_dvars_on_init()
 {
@@ -15,7 +36,6 @@ void force_dvars_on_init()
 		const auto sv_pure = game::native::Dvar_FindVar("sv_pure");
 		const auto com_introPlayed = game::native::Dvar_FindVar("com_introPlayed");
 		const auto sv_punkbuster = game::native::Dvar_FindVar("sv_punkbuster");
-		const auto r_zFeather = game::native::Dvar_FindVar("r_zFeather");
 		const auto r_distortion = game::native::Dvar_FindVar("r_distortion");
 		const auto r_fastSkin = game::native::Dvar_FindVar("r_fastSkin");
 
@@ -35,12 +55,6 @@ void force_dvars_on_init()
 		{
 			game::native::dvar_set_value_dirty(sv_punkbuster, false);
 			game::native::Cmd_ExecuteSingleCommand((game::native::LocalClientNum_t)0, 0, "sv_punkbuster 0\n");
-		}
-
-		// force depthbuffer
-		if (r_zFeather && !r_zFeather->current.enabled)
-		{
-			game::native::Cmd_ExecuteSingleCommand((game::native::LocalClientNum_t)0, 0, "r_zFeather 1\n");
 		}
 
 		// enable distortion (it creates a rendertarget thats needed)
@@ -407,7 +421,7 @@ void db_realloc_entry_pool()
 
 void copy_custom_fastfile()
 {
-	const auto resource = FindResource(utils::nt::library(), MAKEINTRESOURCE(COMMON_FF), RT_RCDATA);
+	/*const auto resource = FindResource(utils::nt::library(), MAKEINTRESOURCE(COMMON_FF), RT_RCDATA);
 	if (!resource)
 	{
 		console::info("Failed to find custom FastFiles!\n");
@@ -422,7 +436,7 @@ void copy_custom_fastfile()
 	}
 
 	const auto out_name = utils::string::va("zone/english/%s.ff", FF_ADDON_MENU_NAME);
-	utils::io::write_file(out_name, std::string(LPSTR(LockResource(handle)), SizeofResource(nullptr, resource)));
+	utils::io::write_file(out_name, std::string(LPSTR(LockResource(handle)), SizeofResource(nullptr, resource)));*/
 }
 
 class common final : public module
@@ -468,6 +482,9 @@ public:
 
 		utils::hook(0x468F19, R_BeginRegistration_stub, HOOK_JUMP).install()->quick();
 
+		// Register String dvars (doing so on module load crashes the game (SL_GetStringOfSize))
+		utils::hook(0x6095EB, register_additional_dvars_stub, HOOK_JUMP).install()->quick();
+
 		// Disable dvar cheat / write protection
 		utils::hook(0x5659E3, disable_dvar_cheats_stub, HOOK_JUMP).install()->quick();
 		utils::hook::nop(0x5659E7 + 1, 1);
@@ -490,7 +507,7 @@ public:
 
 		utils::hook(0x558254, FS_MakeIWDsLocalized, HOOK_JUMP).install()->quick();
 
-		command::add("loadzone", [](command::params params) // unload zone and load zone again
+		command::add("loadzone", [](command::params params)
 		{
 			if (params.length() < 2)
 			{
@@ -511,10 +528,21 @@ public:
 			info[1].freeFlags = game::native::XZONE_FLAGS::XZONE_ZERO;
 
 			game::native::DB_LoadXAssets(info, 2, 1);
+		});		
+	}
+
+	void post_unpack() override
+	{
+		// Hack to load our custom zone after common_mp has been loaded.
+		scheduler::once([]
+		{
+			while (!game::native::Sys_IsDatabaseReady())
+			{
+			}
+
+			command::execute("loadzone yacc");
 		});
 	}
 };
-
-
 
 REGISTER_MODULE(common)
