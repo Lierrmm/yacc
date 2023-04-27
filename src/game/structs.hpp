@@ -896,8 +896,8 @@ namespace game
 			ItemKeyHandler* onKey;
 			const char* enableDvar;
 			int dvarFlags;
-			snd_alias_list_t* focusSound;
-			int feeder; //float feeder; //original name: special
+			void* focusSound;
+			int feeder;
 			int cursorPos[1];
 			itemDefData_t typeData;
 			int imageTrack;
