@@ -2,8 +2,6 @@
 #include <loader/module_loader.hpp>
 #include <game/game.hpp>
 
-#include <module/assets/zone_builder.hpp>
-
 #include <module/setup/console.hpp>
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -242,68 +240,6 @@ void AssetHandler::Relocate(void* start, void* to, DWORD size)
 	{
 		AssetHandler::Relocations[reinterpret_cast<char*>(start) + i] = reinterpret_cast<char*>(to) + i;
 	}
-}
-
-void AssetHandler::ZoneSave(game::native::XAsset asset, Components::ZoneBuilder::Zone* builder)
-{
-	if (AssetHandler::AssetInterfaces.find(asset.type) != AssetHandler::AssetInterfaces.end())
-	{
-		AssetHandler::AssetInterfaces[asset.type]->save(asset.header, builder);
-	}
-	else
-	{
-		console::error("No interface for type '%s'!", game::native::DB_GetXAssetTypeName(asset.type));
-	}
-}
-
-void AssetHandler::ZoneMark(game::native::XAsset asset, Components::ZoneBuilder::Zone* builder)
-{
-	if (AssetHandler::AssetInterfaces.find(asset.type) != AssetHandler::AssetInterfaces.end())
-	{
-		AssetHandler::AssetInterfaces[asset.type]->mark(asset.header, builder);
-	}
-	else
-	{
-		console::error("No interface for type '%s'!", game::native::DB_GetXAssetTypeName(asset.type));
-	}
-}
-
-game::native::XAssetHeader AssetHandler::FindAssetForZone(game::native::XAssetType type, const std::string& filename, Components::ZoneBuilder::Zone* builder, bool isSubAsset)
-{
-	Components::ZoneBuilder::Zone::AssetRecursionMarker _(builder);
-
-	game::native::XAssetHeader header = { nullptr };
-	if (type >= game::native::XAssetType::ASSET_TYPE_COUNT) return header;
-
-	auto tempPool = &AssetHandler::TemporaryAssets[type];
-	auto entry = tempPool->find(filename);
-	if (entry != tempPool->end())
-	{
-		return { entry->second };
-	}
-
-	if (AssetHandler::AssetInterfaces.find(type) != AssetHandler::AssetInterfaces.end())
-	{
-		AssetHandler::AssetInterfaces[type]->load(&header, filename, builder);
-
-		if (header.data)
-		{
-			AssetHandler::StoreTemporaryAsset(type, header);
-		}
-	}
-
-	if (!header.data && isSubAsset)
-	{
-		header = Components::ZoneBuilder::GetEmptyAssetIfCommon(type, filename, builder);
-	}
-
-	if (!header.data)
-	{
-		header = game::native::DB_FindXAssetHeader(type, filename.data());
-		if (header.data) AssetHandler::StoreTemporaryAsset(type, header);
-	}
-
-	return header;
 }
 
 game::native::XAssetHeader AssetHandler::FindOriginalAsset(game::native::XAssetType type, const char* filename)
