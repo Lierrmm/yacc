@@ -897,7 +897,7 @@ namespace game
 			const char* enableDvar;
 			int dvarFlags;
 			void* focusSound;
-			int feeder;
+			float feeder;
 			int cursorPos[1];
 			itemDefData_t typeData;
 			int imageTrack;
@@ -4949,6 +4949,88 @@ namespace game
 			unsigned int size;
 			unsigned int externalSize;
 			unsigned int blockSize[MAX_XFILE_COUNT];
+		};
+
+		enum XFileLanguage : unsigned char
+		{
+			XLANG_NONE = 0x00,
+			XLANG_ENGLISH = 0x01,
+			XLANG_FRENCH = 0x02,
+			XLANG_GERMAN = 0x03,
+			XLANG_ITALIAN = 0x04,
+			XLANG_SPANISH = 0x05,
+			XLANG_BRITISH = 0x06,
+			XLANG_RUSSIAN = 0x07,
+			XLANG_POLISH = 0x08,
+			XLANG_KOREAN = 0x09,
+			XLANG_TAIWANESE = 0x0A,
+			XLANG_JAPANESE = 0x0B,
+			XLANG_CHINESE = 0x0C,
+			XLANG_THAI = 0x0D,
+			XLANG_LEET = 0x0E, // Wat?
+			XLANG_CZECH = 0x0F,
+		};
+
+#pragma pack(push, 1)
+		struct XFileHeader
+		{
+			unsigned __int64 magic;
+			unsigned int version;
+			XFileLanguage language;
+			DWORD highDateTime;
+			DWORD lowDateTime;
+		};
+#pragma pack(pop)
+
+		struct ScriptStringList
+		{
+			int count;
+			const char** strings;
+		};
+
+		struct XAssetList
+		{
+			ScriptStringList stringList;
+			int assetCount;
+			XAsset* assets;
+		};
+
+		struct ZoneHeader
+		{
+			XFile xFile;
+			XAssetList assetList;
+		};
+
+		struct XZoneMemory
+		{
+			XBlock blocks[MAX_XFILE_COUNT];
+			char* lockedVertexData;
+			char* lockedIndexData;
+			void* vertexBuffer;
+			void* indexBuffer;
+		};
+
+		struct XZone
+		{
+			int unk;
+			char name[64];
+			int flags;
+			int allocType;
+			XZoneMemory mem;
+			int fileSize;
+			char modZone;
+		};
+
+		enum $53C66D4FC2874B6934A17E4ED449BCEB
+		{
+			DB_ZONE_CODE_LOC = 0x0,
+			DB_ZONE_COMMON_LOC = 0x1,
+			DB_ZONE_CODE = 0x2,
+			DB_ZONE_COMMON = 0x4,
+			DB_ZONE_GAME = 0x8,
+			DB_ZONE_MOD = 0x10,
+			DB_ZONE_LOAD = 0x20,
+			DB_ZONE_DEV = 0x40
 		};
 
 		#define FS_GENERAL_REF	0x01

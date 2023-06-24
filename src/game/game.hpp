@@ -129,6 +129,9 @@ namespace game
 		extern void Conbuf_AppendText_ASM(const char* string);
 		extern scr_entref_t __cdecl Scr_GetEntityIdRef(unsigned int entId);
 
+		extern int PC_ReadTokenHandle(int handle, pc_token_s* pc_token);
+		extern void UI_AddMenuList(UiContext* dc, MenuList* menuList);
+
 
 		extern float Vec3Normalize(vec3_t& vec);
 		extern void Vec2UnpackTexCoords(const PackedTexCoords in, vec2_t* out);
@@ -141,6 +144,11 @@ namespace game
 
 		extern const char* DB_GetXAssetTypeName(XAssetType type);
 		extern XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name);
+
+		extern const char* DB_GetXAssetName(XAsset* asset);
+		extern int DB_GetZoneIndex(const std::string& name);
+		extern bool DB_IsZoneLoaded(const char* zone);
+		extern XAssetType DB_GetXAssetNameType(const char* name);
 
 		extern void FS_FreeFile(void* buf);
 		extern int FS_ReadFile(const char* path, char** buffer);

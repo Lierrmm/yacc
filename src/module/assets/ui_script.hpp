@@ -25,11 +25,11 @@ public:
 	typedef void(Callback)(Token token);
 	typedef void(CallbackRaw)();
 
-	static void Add(const std::string& name, utils::string::Slot<Callback> callback);
+	static void Add(const std::string& name, utils::string::Slot<UIScript::Callback> callback);
 
 private:
 	static bool RunMenuScript(const char* name, const char** args);
 	static void RunMenuScriptStub();
 
-	static std::unordered_map<std::string, utils::string::Slot<Callback>> UIScripts;
+	static std::unordered_map<std::string, utils::string::Slot<UIScript::Callback>> UIScripts;
 };

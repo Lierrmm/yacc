@@ -172,6 +172,7 @@ namespace game
 	{
 		typedef int(__cdecl* DB_GetXAssetSizeHandler_t)();
 		typedef const char* (*DB_GetXAssetNameHandler_t)(XAssetHeader* asset);
+		typedef void(__cdecl* DB_SetXAssetNameHandler_t)(XAssetHeader* header, const char* name);
 
 		WEAK symbol < void()> Sys_ShowConsole{  0x574DC0 };
 		WEAK symbol < void (const char* message)> Conbuf_AppendText{  0x574E40 };
@@ -227,11 +228,9 @@ namespace game
 		WEAK symbol<void(script_t* script)> Script_SetupTokens{  0x41FDF0 };
 		WEAK symbol<int(char* buffer)> Script_CleanString{  0x56B510 };
 		WEAK symbol<void(int, const char*, ...)> PC_SourceError{  0x54F970 };
-		WEAK symbol<int(int handle, pc_token_s* pc_token)> PC_ReadTokenHandle{  0x41FC60 };  //maybe requires some asm
 		WEAK symbol<menuDef_t* (UiContext* dc, const char* name)> Menus_FindByName{  0x546880 };
 		WEAK symbol<bool(UiContext* dc, menuDef_t* menu)> Menu_IsVisible{  0x54ED30 }; //maybe requires some asm
 		WEAK symbol<MenuList* (const char* menuFile)> UI_LoadMenus{  0x552D70 };
-		WEAK symbol<void(UiContext* dc, MenuList* menuList)> UI_AddMenuList{  0x54F5D0 }; //maybe require some asm
 		WEAK symbol<MenuList* (const char* a2)> sub_552E10{  0x552E10 };
 		WEAK symbol<char* (int localClientNum, char* Destination)> CL_GetClientName{  0x471550 }; //failed to load .menu
 		WEAK symbol<gentity_s* ()> SV_AddTestClient{  0x527F30 };
@@ -266,6 +265,8 @@ namespace game
 		WEAK symbol<void(int a1, char* text)> Con_DrawAutoCompleteChoice_func{ 0x45C760 };
 		WEAK symbol<bool(DWORD lpAddress)> sub_55EBB0{ 0x55EBB0 };
 		WEAK symbol<int(int)> Scr_ExecThread{ 0x51D560 };
+
+		DB_SetXAssetNameHandler_t* DB_SetXAssetNameHandlers = reinterpret_cast<DB_SetXAssetNameHandler_t*>(0x71E960);
 
 		namespace network 
 		{
@@ -323,5 +324,7 @@ namespace game
 		WEAK symbol<GfxScene> scene{ 0xCF07600 };
 
 		WEAK symbol<int> gameTypeCount{ 0xCAE981C };
+
+		WEAK symbol<XZone> g_zones{ 0xFF6FD0 };
 	}
 }

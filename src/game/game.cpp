@@ -824,6 +824,36 @@ namespace game
 			return ref;
 		}
 
+		int PC_ReadTokenHandle(int handle, pc_token_s* pc_token)
+		{
+			static uint32_t PC_ReadTokenHandle_orig = 0x41FC60;
+			static uint32_t result{};
+			__asm
+			{
+				mov edi, pc_token
+				mov eax, handle
+				call PC_ReadTokenHandle_orig
+				mov result, eax
+			}
+
+			return result;
+		}
+
+		void UI_AddMenuList(UiContext* dc, MenuList* menuList)
+		{
+			static uint32_t UI_AddMenuList_orig = 0x54F5D0;
+			__asm
+			{
+				//mov edi, menuList
+				//mov esi, dc
+				push	[menuList]
+				mov     esi, dc
+				call UI_AddMenuList_orig
+				pop esi
+				//add     esp, 4
+			}
+		}
+
 
 		float Vec3Normalize(vec3_t& vec)
 		{
@@ -920,6 +950,64 @@ namespace game
 		XAssetEntry* DB_FindXAssetEntry(XAssetType type, const char* name)
 		{
 			return db_find_x_asset_entry(type, name);
+		}
+
+		const char* DB_GetXAssetName(XAsset* asset)
+		{
+			if (!asset) return "";
+			return DB_GetXAssetNameHandlers[asset->type](&asset->header);
+		}
+
+		XAssetType DB_GetXAssetNameType(const char* name)
+		{
+			for (int i = 0; i < ASSET_TYPE_COUNT; ++i)
+			{
+				XAssetType type = static_cast<XAssetType>(i);
+				if (!_stricmp(DB_GetXAssetTypeName(type), name))
+				{
+					// Col map workaround!
+					if (type == game::native::XAssetType::ASSET_TYPE_CLIPMAP)
+					{
+						return game::native::XAssetType::ASSET_TYPE_CLIPMAP_PVS;
+					}
+
+					return type;
+				}
+			}
+
+			return ASSET_TYPE_INVALID;
+		}
+
+		int DB_GetZoneIndex(const std::string& name)
+		{
+			for (int i = 0; i < 32; ++i)
+			{
+				if (game::native::g_zones[i].name == name)
+				{
+					return i;
+				}
+			}
+
+			return -1;
+		}
+
+		bool DB_IsZoneLoaded(const char* zone)
+		{
+			int zoneCount = utils::hook::get<int>(0xECF8CC);
+			char* zoneIndices = reinterpret_cast<char*>(0x10C8184);
+			char* zoneData = reinterpret_cast<char*>(0xFF6FD0);
+
+			for (int i = 0; i < zoneCount; ++i)
+			{
+				std::string name = zoneData + 4 + 0xA4 * (zoneIndices[i] & 0xFF);
+
+				if (name == zone)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		void FS_FreeFile(void* buf)
