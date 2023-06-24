@@ -27,15 +27,6 @@ void set_ultrawide_dvar(bool state)
 		game::native::dvar_set_value_dirty(dvars::ui_ultrawide, state);
 	}
 }
-
-void set_custom_aspect_ratio()
-{
-	if (dvars::r_aspectRatio_custom)
-	{
-		*(float*)(0xCC8F640) = dvars::r_aspectRatio_custom->current.value;
-	}
-}
-
 // hook R_AspectRatio to initially reset the ultrawide dvar (menu helper)
 __declspec(naked) void aspect_ratio_custom_reset_stub()
 {
@@ -54,46 +45,6 @@ __declspec(naked) void aspect_ratio_custom_reset_stub()
 		jmp		retn_addr;			// jump back to break op
 	}
 }
-
-// set custom aspect ratio by using the default switchcase in R_AspectRatio
-__declspec(naked) void aspect_ratio_custom_stub()
-{
-	const static uint32_t retn_addr = 0x5D3245;
-	__asm
-	{
-		pushad;
-		push	1;
-		call	set_ultrawide_dvar;
-		add		esp, 4h;
-
-		Call	set_custom_aspect_ratio;
-		popad;
-
-		mov     ecx, 1;				// widescreen true
-		jmp		retn_addr;			// jump back to break op
-	}
-}
-
-//void dump_gsc_script(const std::string& name, game::native::XAssetHeader header)
-//{
-//	if (!g_dump_scripts->current.enabled)
-//	{
-//		return;
-//	}
-//
-//	std::string buffer;
-//	buffer.append(header.data->name, strlen(header.scriptfile->name) + 1);
-//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->compressedLen), 4);
-//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->len), 4);
-//	buffer.append(reinterpret_cast<char*>(&header.scriptfile->bytecodeLen), 4);
-//	buffer.append(header.scriptfile->buffer, header.scriptfile->compressedLen);
-//	buffer.append(header.scriptfile->bytecode, header.scriptfile->bytecodeLen);
-//
-//	const auto out_name = utils::string::va("gsc_dump/%s.gscbin", name.data());
-//	utils::io::write_file(out_name, buffer);
-//
-//	console::info("Dumped %s\n", out_name);
-//}
 
 game::native::GfxImage* findImage(game::native::Material* material, const std::string& type)
 {
@@ -275,34 +226,6 @@ public:
 
 		// hook R_AspectRatio to initially reset the ultrawide dvar (menu helper)
 		utils::hook::nop(0x5D318E, 6);		utils::hook(0x5D318E, aspect_ratio_custom_reset_stub, HOOK_JUMP).install()->quick();
-
-		// Set custom aspect ratio by using the default switchcase in R_AspectRatio
-		utils::hook::nop(0x5D325B, 6);		utils::hook(0x5D325B, aspect_ratio_custom_stub, HOOK_JUMP).install()->quick();
-
-		//dvars::r_aspectRatio_custom = game::native::Dvar_RegisterFloat(
-		//	/* name		*/ "r_aspectRatio_custom",
-		//	/* desc		*/ "description",
-		//	/* default	*/ 2.3333333f,
-		//	/* minVal	*/ 0.1f,
-		//	/* maxVal	*/ 10.0f,
-		//	/* flags	*/ game::native::dvar_flags::saved);
-
-		static std::vector <const char*> r_customAspectratio =
-		{
-			"auto",
-			"4:3",
-			"16:10",
-			"16:9",
-			"custom",
-		};
-
-		dvars::r_aspectRatio = game::native::Dvar_RegisterEnum(
-			/* name		*/ "r_aspectRatio",
-			/* desc		*/ "Screen aspect ratio. Use \"custom\" and \"r_aspectRatio_custom\" if your aspect ratio is not natively supported! (21/9 = 2.3333)",
-			/* default	*/ 0,
-			/* enumSize	*/ r_customAspectratio.size(),
-			/* enumData */ r_customAspectratio.data(),
-			/* flags	*/ game::native::dvar_flags::saved);
 
 		dvars::ui_ultrawide = game::native::Dvar_RegisterBool(
 			/* name		*/ "ui_ultrawide",

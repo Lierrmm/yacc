@@ -4,10 +4,7 @@
 
 namespace dvars
 {
-	extern game::native::dvar_t* ui_ultrawide = nullptr;
-	extern game::native::dvar_t* r_aspectRatio_custom = nullptr;
-	extern game::native::dvar_t* r_aspectRatio = nullptr;
-	
+	extern game::native::dvar_t* ui_ultrawide = nullptr;	
 
 	// Console 
 	extern game::native::dvar_t* con_minicon_position = nullptr;

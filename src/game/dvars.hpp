@@ -3,8 +3,6 @@
 namespace dvars
 {
 	extern game::native::dvar_t* ui_ultrawide;
-	extern game::native::dvar_t* r_aspectRatio_custom;
-	extern game::native::dvar_t* r_aspectRatio;
 
 	extern game::native::dvar_t* con_minicon_position;
 	extern game::native::dvar_t* con_minicon_font;

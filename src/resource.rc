@@ -87,15 +87,15 @@ END
 
 BINARY_MP   RCDATA "resources/iw3mp.exe.diff"
 
-IMAGE_SPLASH IMAGE "resources/splash.bmp"
-IMAGE_LOGO   IMAGE "resources/logo.bmp"
-
-INTRO_VIDEO  RCDATA "resources/IW_logo.bik"
+//IMAGE_SPLASH IMAGE "resources/splash.bmp"
+//IMAGE_LOGO   IMAGE "resources/logo.bmp"
+//
+//INTRO_VIDEO  RCDATA "resources/IW_logo.bik"
 
 MENU_MAIN   RCDATA "resources/main.html"
 
-COMMON_FF   RCDATA "resources/yacc.ff"
-YACC_IWD    RCDATA "resources/yacc.iwd"
+//COMMON_FF   RCDATA "resources/yacc.ff"
+//YACC_IWD    RCDATA "resources/yacc.iwd"
 
 
 #endif    // English (United States) resources
