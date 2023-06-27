@@ -229,13 +229,15 @@ int main()
 			verify_tls();
 			if (!module_loader::post_start()) return 0;
 
-			auto mode = detect_mode_from_arguments();
+			/*auto mode = detect_mode_from_arguments();
 			if (mode == launcher::mode::none)
 			{
 				const launcher launcher;
 				mode = launcher.run();
 				if (mode == launcher::mode::none) return 0;
-			}
+			}*/
+
+			auto mode = launcher::mode::multiplayer;
 
 			entry_point = load_binary(mode);
 			if (!entry_point)
